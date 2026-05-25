@@ -39,12 +39,42 @@ return new class extends Migration
             $table->string('title');
             $table->string('regulation_number')->nullable();
             $table->unsignedInteger('year')->nullable();
+            $table->string('category')->nullable();
+            $table->string('priority')->nullable();
             $table->text('description')->nullable();
+            $table->text('usage_notes')->nullable();
             $table->string('file_path')->nullable();
+            $table->string('original_filename')->nullable();
+            $table->string('mime_type')->nullable();
+            $table->unsignedBigInteger('file_size')->nullable();
             $table->longText('extracted_text')->nullable();
+            $table->enum('extraction_status', ['pending', 'extracted', 'need_ocr', 'ocr_processing', 'ocr_completed', 'failed'])->default('pending');
+            $table->string('extraction_method')->nullable();
+            $table->longText('extraction_error')->nullable();
+            $table->timestamp('extracted_at')->nullable();
+            $table->unsignedInteger('page_count')->nullable();
+            $table->string('ocr_language')->default('ind');
+            $table->decimal('ocr_confidence', 5, 2)->nullable();
+            $table->longText('summary')->nullable();
+            $table->json('keywords')->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+        });
+
+        Schema::create('regulation_pages', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('regulation_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('page_number');
+            $table->longText('text')->nullable();
+            $table->longText('ocr_text')->nullable();
+            $table->string('extraction_method')->nullable();
+            $table->decimal('confidence', 5, 2)->nullable();
+            $table->string('image_path')->nullable();
+            $table->enum('status', ['pending', 'extracted', 'ocr_completed', 'failed'])->default('pending');
+            $table->text('error_message')->nullable();
+            $table->timestamps();
+            $table->unique(['regulation_id', 'page_number']);
         });
 
         Schema::create('questions', function (Blueprint $table) {
@@ -61,6 +91,8 @@ return new class extends Migration
             $table->char('correct_answer', 1);
             $table->text('explanation')->nullable();
             $table->string('source_reference')->nullable();
+            $table->string('question_type')->nullable();
+            $table->unsignedInteger('source_page')->nullable();
             $table->unsignedInteger('score')->default(1);
             $table->enum('difficulty', ['easy', 'medium', 'hard', 'case'])->default('medium');
             $table->unsignedInteger('order_number')->nullable();
@@ -82,8 +114,14 @@ return new class extends Migration
             $table->char('correct_answer', 1);
             $table->text('explanation')->nullable();
             $table->string('source_reference')->nullable();
+            $table->unsignedInteger('source_page')->nullable();
+            $table->unsignedInteger('source_chunk_index')->nullable();
             $table->string('difficulty')->default('medium');
             $table->string('question_type')->default('Pemahaman pasal');
+            $table->enum('validation_status', ['valid', 'warning', 'invalid'])->nullable();
+            $table->text('validation_notes')->nullable();
+            $table->string('ai_model')->nullable();
+            $table->longText('ai_raw_response')->nullable();
             $table->enum('status', ['draft', 'approved', 'rejected'])->default('draft');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
@@ -102,12 +140,26 @@ return new class extends Migration
             $table->unsignedInteger('score_kepemimpinan')->default(0);
             $table->unsignedInteger('score_pelayanan_publik')->default(0);
             $table->unsignedInteger('score_studi_kasus')->default(0);
+            $table->unsignedInteger('score_perkawinan_perceraian_asn')->default(0);
             $table->unsignedInteger('total_answered')->default(0);
             $table->unsignedInteger('total_correct')->default(0);
             $table->unsignedInteger('total_wrong')->default(0);
             $table->enum('status', ['ongoing', 'finished', 'expired'])->default('ongoing');
             $table->enum('competency_status', ['kompeten', 'belum_kompeten'])->nullable();
             $table->timestamps();
+        });
+
+        Schema::create('exam_attempt_category_scores', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('exam_attempt_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('exam_category_id')->constrained()->cascadeOnDelete();
+            $table->unsignedInteger('score')->default(0);
+            $table->unsignedInteger('total_questions')->default(0);
+            $table->unsignedInteger('total_answered')->default(0);
+            $table->unsignedInteger('total_correct')->default(0);
+            $table->unsignedInteger('total_wrong')->default(0);
+            $table->timestamps();
+            $table->unique(['exam_attempt_id', 'exam_category_id'], 'attempt_category_unique');
         });
 
         Schema::create('exam_answers', function (Blueprint $table) {
@@ -126,9 +178,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('exam_answers');
+        Schema::dropIfExists('exam_attempt_category_scores');
         Schema::dropIfExists('exam_attempts');
         Schema::dropIfExists('generated_questions');
         Schema::dropIfExists('questions');
+        Schema::dropIfExists('regulation_pages');
         Schema::dropIfExists('regulations');
         Schema::dropIfExists('exam_categories');
         Schema::dropIfExists('exams');

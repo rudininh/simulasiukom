@@ -16,11 +16,9 @@
         <tr><th>Nama Ujian</th><td>{{ $attempt->exam->title }}</td></tr>
         <tr><th>Tanggal Ujian</th><td>{{ $attempt->started_at->format('d/m/Y H:i') }}</td></tr>
         <tr><th>Skor Total</th><td>{{ $attempt->score_total }}</td></tr>
-        <tr><th>Regulasi ASN</th><td>{{ $attempt->score_regulasi_asn }}</td></tr>
-        <tr><th>Manajemen ASN</th><td>{{ $attempt->score_manajemen_asn }}</td></tr>
-        <tr><th>Kepemimpinan dan Manajerial</th><td>{{ $attempt->score_kepemimpinan }}</td></tr>
-        <tr><th>Pelayanan Publik dan Etika Birokrasi</th><td>{{ $attempt->score_pelayanan_publik }}</td></tr>
-        <tr><th>Studi Kasus Manajemen ASN</th><td>{{ $attempt->score_studi_kasus }}</td></tr>
+        @foreach($attempt->categoryScores as $score)
+            <tr><th>{{ $score->category->name }}</th><td>{{ $score->score }}</td></tr>
+        @endforeach
         <tr><th>Status Kompetensi</th><td>{{ strtoupper(str_replace('_', ' ', $attempt->competency_status)) }}</td></tr>
         <tr><th>Passing Grade</th><td>{{ number_format($attempt->exam->passing_grade, 2) }}</td></tr>
     </table>

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\RegulationController;
+use App\Http\Controllers\Admin\RegulationQuestionGeneratorController;
 use App\Http\Controllers\AttemptController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -34,6 +36,8 @@ Route::middleware(['auth', 'role:peserta'])->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/regulasi', [RegulationPublicController::class, 'index'])->name('regulations.public');
+    Route::get('/regulasi/{regulation}', [RegulationPublicController::class, 'show'])->name('regulations.public.show');
+    Route::get('/regulasi/{regulation}/preview', [RegulationPublicController::class, 'preview'])->name('regulations.public.preview');
     Route::get('/hasil/{attempt}/cetak', [AttemptController::class, 'print'])->name('results.print');
 });
 
@@ -54,15 +58,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/questions/import', [AdminController::class, 'importQuestions'])->name('questions.import');
     Route::put('/questions/{question}', [AdminController::class, 'updateQuestion'])->name('questions.update');
     Route::delete('/questions/{question}', [AdminController::class, 'destroyQuestion'])->name('questions.destroy');
-    Route::get('/regulations', [AdminController::class, 'regulations'])->name('regulations.index');
-    Route::post('/regulations', [AdminController::class, 'storeRegulation'])->name('regulations.store');
-    Route::put('/regulations/{regulation}', [AdminController::class, 'updateRegulation'])->name('regulations.update');
-    Route::delete('/regulations/{regulation}', [AdminController::class, 'destroyRegulation'])->name('regulations.destroy');
-    Route::get('/regulations/{regulation}/extract', [AdminController::class, 'extractRegulation'])->name('regulations.extract');
-    Route::post('/regulations/{regulation}/extract', [AdminController::class, 'runExtractRegulation'])->name('regulations.extract.run');
+    Route::get('/regulations', [RegulationController::class, 'index'])->name('regulations.index');
+    Route::post('/regulations', [RegulationController::class, 'store'])->name('regulations.store');
+    Route::get('/regulations/{regulation}', [RegulationController::class, 'show'])->name('regulations.show');
+    Route::put('/regulations/{regulation}', [RegulationController::class, 'update'])->name('regulations.update');
+    Route::delete('/regulations/{regulation}', [RegulationController::class, 'destroy'])->name('regulations.destroy');
+    Route::get('/regulations/{regulation}/preview', [RegulationController::class, 'preview'])->name('regulations.preview');
+    Route::get('/regulations/{regulation}/download', [RegulationController::class, 'download'])->name('regulations.download');
+    Route::get('/regulations/{regulation}/extract', [RegulationController::class, 'text'])->name('regulations.extract');
+    Route::post('/regulations/{regulation}/extract', [RegulationController::class, 'extractText'])->name('regulations.extract.run');
+    Route::post('/regulations/{regulation}/extract-text', [RegulationController::class, 'extractText'])->name('regulations.extract-text');
+    Route::post('/regulations/{regulation}/ocr', [RegulationController::class, 'ocr'])->name('regulations.ocr');
+    Route::get('/regulations/{regulation}/text', [RegulationController::class, 'text'])->name('regulations.text');
+    Route::get('/regulations/{regulation}/text/download', [RegulationController::class, 'downloadText'])->name('regulations.text.download');
+    Route::post('/regulations/{regulation}/summarize', [RegulationController::class, 'summarize'])->name('regulations.summarize');
+    Route::get('/regulations/{regulation}/generate-questions', [RegulationQuestionGeneratorController::class, 'create'])->name('regulations.generate-questions');
+    Route::post('/regulations/{regulation}/generate-questions', [RegulationQuestionGeneratorController::class, 'store'])->name('regulations.generate-questions.store');
     Route::get('/question-generator', [AdminController::class, 'questionGenerator'])->name('question-generator.index');
     Route::post('/question-generator/generate', [AdminController::class, 'generateQuestions'])->name('question-generator.generate');
     Route::get('/generated-questions', [AdminController::class, 'generatedQuestions'])->name('generated-questions.index');
+    Route::post('/generated-questions/bulk', [AdminController::class, 'bulkGeneratedQuestions'])->name('generated-questions.bulk');
     Route::get('/generated-questions/{generatedQuestion}/edit', [AdminController::class, 'editGeneratedQuestion'])->name('generated-questions.edit');
     Route::put('/generated-questions/{generatedQuestion}', [AdminController::class, 'updateGeneratedQuestion'])->name('generated-questions.update');
     Route::post('/generated-questions/{generatedQuestion}/approve', [AdminController::class, 'approveGeneratedQuestion'])->name('generated-questions.approve');

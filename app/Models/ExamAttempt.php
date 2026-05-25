@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExamAttempt extends Model
 {
-    protected $fillable = ['user_id', 'exam_id', 'started_at', 'finished_at', 'duration_seconds', 'score_total', 'score_regulasi_asn', 'score_manajemen_asn', 'score_kepemimpinan', 'score_pelayanan_publik', 'score_studi_kasus', 'total_answered', 'total_correct', 'total_wrong', 'status', 'competency_status'];
+    protected $fillable = ['user_id', 'exam_id', 'started_at', 'finished_at', 'duration_seconds', 'score_total', 'score_regulasi_asn', 'score_manajemen_asn', 'score_kepemimpinan', 'score_pelayanan_publik', 'score_studi_kasus', 'score_perkawinan_perceraian_asn', 'total_answered', 'total_correct', 'total_wrong', 'status', 'competency_status'];
 
     protected $casts = [
         'started_at' => 'datetime',
@@ -27,6 +27,11 @@ class ExamAttempt extends Model
     public function answers()
     {
         return $this->hasMany(ExamAnswer::class);
+    }
+
+    public function categoryScores()
+    {
+        return $this->hasMany(ExamAttemptCategoryScore::class);
     }
 
     public function remainingSeconds(): int

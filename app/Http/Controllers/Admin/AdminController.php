@@ -255,10 +255,23 @@ class AdminController extends Controller
         return redirect()->route('admin.generated-questions.index')->with('success', count($saved).' draft soal berhasil dibuat.');
     }
 
-    public function generatedQuestions()
+    public function generatedQuestions(Request $request)
     {
+        $query = GeneratedQuestion::with('regulation', 'exam', 'category')->latest();
+        foreach (['regulation_id', 'exam_id', 'exam_category_id', 'difficulty', 'question_type', 'status', 'validation_status'] as $field) {
+            if ($request->filled($field)) {
+                $query->where($field, $request->input($field));
+            }
+        }
+        if ($request->filled('keyword')) {
+            $query->where('question_text', 'like', '%'.$request->keyword.'%');
+        }
+
         return view('admin.generated_questions.index', [
-            'drafts' => GeneratedQuestion::with('regulation', 'exam', 'category')->latest()->paginate(15),
+            'drafts' => $query->paginate(15)->withQueryString(),
+            'regulations' => Regulation::orderBy('title')->get(),
+            'exams' => Exam::orderBy('title')->get(),
+            'categories' => ExamCategory::with('exam')->get(),
         ]);
     }
 
@@ -279,6 +292,7 @@ class AdminController extends Controller
             'correct_answer' => ['required', 'in:A,B,C,D,E'],
             'explanation' => ['nullable', 'string'],
             'source_reference' => ['nullable', 'string', 'max:255'],
+            'source_page' => ['nullable', 'integer', 'min:1'],
             'difficulty' => ['required', 'string', 'max:50'],
             'question_type' => ['required', 'string', 'max:100'],
         ]));
@@ -301,6 +315,8 @@ class AdminController extends Controller
             'correct_answer' => $generatedQuestion->correct_answer,
             'explanation' => $generatedQuestion->explanation,
             'source_reference' => $generatedQuestion->source_reference,
+            'source_page' => $generatedQuestion->source_page,
+            'question_type' => $generatedQuestion->question_type,
             'difficulty' => $generatedQuestion->difficulty,
             'score' => 1,
             'order_number' => (Question::where('exam_id', $generatedQuestion->exam_id)->max('order_number') ?? 0) + 1,
@@ -317,6 +333,35 @@ class AdminController extends Controller
         return back()->with('success', 'Draft soal ditolak.');
     }
 
+    public function bulkGeneratedQuestions(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['exists:generated_questions,id'],
+            'action' => ['required', 'in:approve,reject,delete,assign'],
+            'exam_id' => ['nullable', 'exists:exams,id'],
+            'exam_category_id' => ['nullable', 'exists:exam_categories,id'],
+        ]);
+
+        $drafts = GeneratedQuestion::whereIn('id', $data['ids'])->get();
+        foreach ($drafts as $draft) {
+            if ($data['action'] === 'approve' && $draft->status === 'draft') {
+                $this->approveGeneratedQuestion($draft);
+            } elseif ($data['action'] === 'reject') {
+                $draft->update(['status' => 'rejected']);
+            } elseif ($data['action'] === 'delete') {
+                $draft->delete();
+            } elseif ($data['action'] === 'assign') {
+                $draft->update(array_filter([
+                    'exam_id' => $data['exam_id'] ?? null,
+                    'exam_category_id' => $data['exam_category_id'] ?? null,
+                ]));
+            }
+        }
+
+        return back()->with('success', 'Aksi bulk draft soal selesai diproses.');
+    }
+
     public function attempts()
     {
         return view('admin.attempts.index', [
@@ -326,7 +371,7 @@ class AdminController extends Controller
 
     public function attemptDetail(ExamAttempt $attempt)
     {
-        $attempt->load('user', 'exam', 'answers.question.category');
+        $attempt->load('user', 'exam', 'answers.question.category', 'categoryScores.category');
         return view('admin.results.show', compact('attempt'));
     }
 
@@ -367,7 +412,7 @@ class AdminController extends Controller
         return $request->validate([
             'exam_id' => ['required', 'exists:exams,id'],
             'name' => ['required', 'string', 'max:255'],
-            'code' => ['required', 'string', 'max:10'],
+            'code' => ['required', 'string', 'max:50'],
             'question_count' => ['required', 'integer', 'min:1'],
             'passing_score' => ['nullable', 'numeric', 'min:0'],
             'weight' => ['nullable', 'numeric', 'min:0'],
@@ -389,6 +434,8 @@ class AdminController extends Controller
             'correct_answer' => ['required', 'in:A,B,C,D,E'],
             'explanation' => ['nullable', 'string'],
             'source_reference' => ['nullable', 'string', 'max:255'],
+            'question_type' => ['nullable', 'string', 'max:100'],
+            'source_page' => ['nullable', 'integer', 'min:1'],
             'score' => ['required', 'integer', 'min:0'],
             'difficulty' => ['required', 'in:easy,medium,hard,case'],
             'order_number' => ['nullable', 'integer', 'min:1'],

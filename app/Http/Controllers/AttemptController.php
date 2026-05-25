@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ExamAnswer;
 use App\Models\ExamAttempt;
+use App\Models\ExamAttemptCategoryScore;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -77,14 +78,14 @@ class AttemptController extends Controller
             $this->expireIfNeeded($attempt);
         }
 
-        $attempt->load('exam', 'user');
+        $attempt->load('exam.categories', 'user', 'categoryScores.category');
         return view('attempts.result', compact('attempt'));
     }
 
     public function print(ExamAttempt $attempt)
     {
         $this->authorizeAttempt($attempt);
-        $attempt->load('exam', 'user');
+        $attempt->load('exam.categories', 'user', 'categoryScores.category');
 
         return view('attempts.print', compact('attempt'));
     }
@@ -119,36 +120,64 @@ class AttemptController extends Controller
     private function finishAttempt(ExamAttempt $attempt, string $status): void
     {
         DB::transaction(function () use ($attempt, $status) {
-            $attempt->load('answers.question.category', 'exam');
-            $scores = [
-                'REGULASI_ASN' => 0,
-                'MANAJEMEN_ASN' => 0,
-                'KEPEMIMPINAN' => 0,
-                'PELAYANAN_PUBLIK' => 0,
-                'STUDI_KASUS' => 0,
-            ];
-            $correct = 0;
+            $attempt->load('answers.question.category', 'exam.categories.questions');
+            $categoryStats = [];
+            foreach ($attempt->exam->categories as $category) {
+                $categoryStats[$category->id] = [
+                    'category' => $category,
+                    'score' => 0,
+                    'total_questions' => $category->questions()->where('is_active', true)->count(),
+                    'total_answered' => 0,
+                    'total_correct' => 0,
+                    'total_wrong' => 0,
+                ];
+            }
+
             foreach ($attempt->answers as $answer) {
-                $code = strtoupper($answer->question->category->code);
-                if (isset($scores[$code])) {
-                    $scores[$code] += $answer->score_obtained;
+                $categoryId = $answer->question->exam_category_id;
+                if (!isset($categoryStats[$categoryId])) {
+                    continue;
                 }
+                $categoryStats[$categoryId]['score'] += $answer->score_obtained;
+                $categoryStats[$categoryId]['total_answered'] += $answer->selected_answer ? 1 : 0;
                 if ($answer->is_correct) {
-                    $correct++;
+                    $categoryStats[$categoryId]['total_correct']++;
+                } elseif ($answer->selected_answer) {
+                    $categoryStats[$categoryId]['total_wrong']++;
                 }
             }
 
-            $total = array_sum($scores);
+            $total = collect($categoryStats)->sum('score');
+            $correct = collect($categoryStats)->sum('total_correct');
             $finishedAt = now();
             $answered = $attempt->answers->whereNotNull('selected_answer')->count();
+
+            foreach ($categoryStats as $categoryId => $stats) {
+                ExamAttemptCategoryScore::updateOrCreate(
+                    ['exam_attempt_id' => $attempt->id, 'exam_category_id' => $categoryId],
+                    [
+                        'score' => $stats['score'],
+                        'total_questions' => $stats['total_questions'],
+                        'total_answered' => $stats['total_answered'],
+                        'total_correct' => $stats['total_correct'],
+                        'total_wrong' => $stats['total_wrong'],
+                    ]
+                );
+            }
+
+            $legacyScore = function (string $code) use ($categoryStats): int {
+                $stats = collect($categoryStats)->first(fn ($item) => $item['category']->code === $code);
+                return $stats ? (int) $stats['score'] : 0;
+            };
             $attempt->update([
                 'finished_at' => $attempt->finished_at ?: $finishedAt,
                 'duration_seconds' => $attempt->started_at->diffInSeconds($attempt->finished_at ?: $finishedAt),
-                'score_regulasi_asn' => $scores['REGULASI_ASN'],
-                'score_manajemen_asn' => $scores['MANAJEMEN_ASN'],
-                'score_kepemimpinan' => $scores['KEPEMIMPINAN'],
-                'score_pelayanan_publik' => $scores['PELAYANAN_PUBLIK'],
-                'score_studi_kasus' => $scores['STUDI_KASUS'],
+                'score_regulasi_asn' => $legacyScore('REGULASI_ASN'),
+                'score_manajemen_asn' => $legacyScore('MANAJEMEN_ASN'),
+                'score_kepemimpinan' => $legacyScore('KEPEMIMPINAN'),
+                'score_pelayanan_publik' => $legacyScore('PELAYANAN_PUBLIK'),
+                'score_studi_kasus' => $legacyScore('STUDI_KASUS'),
+                'score_perkawinan_perceraian_asn' => $legacyScore('PERKAWINAN_PERCERAIAN_ASN'),
                 'score_total' => $total,
                 'total_answered' => $answered,
                 'total_correct' => $correct,

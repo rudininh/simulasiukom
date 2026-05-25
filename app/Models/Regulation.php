@@ -6,7 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Regulation extends Model
 {
-    protected $fillable = ['title', 'regulation_number', 'year', 'description', 'file_path', 'extracted_text', 'status', 'uploaded_by'];
+    protected $fillable = [
+        'title', 'regulation_number', 'year', 'category', 'priority', 'description', 'usage_notes',
+        'file_path', 'original_filename', 'mime_type', 'file_size', 'extracted_text', 'extraction_status',
+        'extraction_method', 'extraction_error', 'extracted_at', 'page_count', 'ocr_language',
+        'ocr_confidence', 'summary', 'keywords', 'status', 'uploaded_by',
+    ];
+
+    protected $casts = [
+        'extracted_at' => 'datetime',
+        'keywords' => 'array',
+    ];
 
     public function uploader()
     {
@@ -16,5 +26,15 @@ class Regulation extends Model
     public function generatedQuestions()
     {
         return $this->hasMany(GeneratedQuestion::class);
+    }
+
+    public function pages()
+    {
+        return $this->hasMany(RegulationPage::class)->orderBy('page_number');
+    }
+
+    public function isPdf(): bool
+    {
+        return str_contains((string) $this->mime_type, 'pdf') || strtolower(pathinfo((string) $this->file_path, PATHINFO_EXTENSION)) === 'pdf';
     }
 }

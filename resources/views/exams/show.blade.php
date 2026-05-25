@@ -21,6 +21,7 @@
                         @foreach ($exam->categories as $category)
                             <div class="d-flex justify-content-between py-2"><span><i class="fa-solid fa-book text-primary me-2"></i>{{ $category->name }} ({{ $category->code }})</span><span class="badge bg-secondary rounded-pill">{{ $category->question_count }} soal</span></div>
                         @endforeach
+                        <p class="small text-muted mt-3">Materi Perkawinan dan Perceraian ASN menguji pemahaman peserta mengenai prosedur izin perkawinan, izin perceraian, surat keterangan, pemeriksaan pejabat, serta konsekuensi disiplin bagi PNS/ASN.</p>
                     </div>
                 </div>
             </div>

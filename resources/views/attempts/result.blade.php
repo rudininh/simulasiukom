@@ -10,12 +10,10 @@
             <span class="badge {{ $attempt->competency_status === 'kompeten' ? 'bg-success' : 'bg-danger' }} mb-3">{{ $attempt->competency_status === 'kompeten' ? 'KOMPETEN' : 'BELUM KOMPETEN' }}</span>
             <div class="score-total">{{ $attempt->score_total }}</div>
             <div class="fw-bold mb-4">Skor Anda</div>
-            <div class="row">
-                <div class="col"><div class="score-part">{{ $attempt->score_regulasi_asn }}</div><small>Regulasi ASN</small></div>
-                <div class="col"><div class="score-part">{{ $attempt->score_manajemen_asn }}</div><small>Manajemen ASN</small></div>
-                <div class="col"><div class="score-part">{{ $attempt->score_kepemimpinan }}</div><small>Kepemimpinan</small></div>
-                <div class="col"><div class="score-part">{{ $attempt->score_pelayanan_publik }}</div><small>Pelayanan Publik</small></div>
-                <div class="col"><div class="score-part">{{ $attempt->score_studi_kasus }}</div><small>Studi Kasus</small></div>
+            <div class="row g-3">
+                @foreach($attempt->categoryScores as $score)
+                    <div class="col"><div class="score-part">{{ $score->score }}</div><small>{{ $score->category->name }}</small></div>
+                @endforeach
             </div>
         </div>
         <div class="text-center mt-3">

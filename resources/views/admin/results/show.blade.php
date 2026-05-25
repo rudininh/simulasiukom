@@ -5,9 +5,10 @@
     <h4>{{ $attempt->exam->title }}</h4>
     <p>{{ $attempt->user->name }} - {{ strtoupper(str_replace('_',' ', $attempt->competency_status)) }}</p>
     <div class="row g-3">
-        @foreach([['Regulasi ASN',$attempt->score_regulasi_asn],['Manajemen ASN',$attempt->score_manajemen_asn],['Kepemimpinan',$attempt->score_kepemimpinan],['Pelayanan Publik',$attempt->score_pelayanan_publik],['Studi Kasus',$attempt->score_studi_kasus],['Total',$attempt->score_total]] as $score)
-            <div class="col-md-2"><div class="cat-card p-3 text-center"><strong>{{ $score[1] }}</strong><br><small>{{ $score[0] }}</small></div></div>
+        @foreach($attempt->categoryScores as $score)
+            <div class="col-md-2"><div class="cat-card p-3 text-center"><strong>{{ $score->score }}</strong><br><small>{{ $score->category->name }}</small></div></div>
         @endforeach
+        <div class="col-md-2"><div class="cat-card p-3 text-center"><strong>{{ $attempt->score_total }}</strong><br><small>Total</small></div></div>
     </div>
 </div>
 @endsection

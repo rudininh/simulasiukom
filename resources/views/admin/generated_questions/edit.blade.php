@@ -9,6 +9,7 @@
         <div class="col-md-3"><input class="form-control" name="difficulty" value="{{ $generatedQuestion->difficulty }}"></div>
         <div class="col-md-4"><input class="form-control" name="question_type" value="{{ $generatedQuestion->question_type }}"></div>
         <div class="col-md-5"><input class="form-control" name="source_reference" value="{{ $generatedQuestion->source_reference }}"></div>
+        <div class="col-md-2"><input class="form-control" name="source_page" type="number" value="{{ $generatedQuestion->source_page }}" placeholder="Halaman"></div>
         <div class="col-12"><textarea class="form-control" name="explanation" rows="4">{{ $generatedQuestion->explanation }}</textarea></div>
         <div class="col-12"><button class="btn btn-navy">Simpan Draft</button></div>
     </form>

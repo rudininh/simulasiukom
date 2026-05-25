@@ -10,6 +10,9 @@
             <a href="{{ route('admin.categories.index') }}"><i class="fa-solid fa-layer-group me-2"></i>Kategori Ujian</a>
             <a href="{{ route('admin.questions.index') }}"><i class="fa-solid fa-file-lines me-2"></i>Bank Soal</a>
             <a href="{{ route('admin.regulations.index') }}"><i class="fa-solid fa-scale-balanced me-2"></i>Bank Regulasi</a>
+            <a href="{{ route('admin.regulations.index') }}"><i class="fa-solid fa-upload me-2"></i>Upload Regulasi</a>
+            <a href="{{ route('admin.regulations.index') }}"><i class="fa-solid fa-file-image me-2"></i>OCR Regulasi</a>
+            <a href="{{ route('admin.regulations.index') }}"><i class="fa-solid fa-file-pdf me-2"></i>Generate Soal dari PDF</a>
             <a href="{{ route('admin.question-generator.index') }}"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate Soal</a>
             <a href="{{ route('admin.generated-questions.index') }}"><i class="fa-solid fa-list-check me-2"></i>Draft Soal AI</a>
             <a href="{{ route('admin.results.index') }}"><i class="fa-solid fa-chart-simple me-2"></i>Hasil Ujian</a>

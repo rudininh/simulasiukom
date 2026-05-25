@@ -9,7 +9,9 @@
                 <h4 class="fw-bold text-primary-emphasis">{{ $regulation->title }}</h4>
                 <p class="mb-1"><strong>Nomor:</strong> {{ $regulation->regulation_number }}</p>
                 <p class="mb-1"><strong>Tahun:</strong> {{ $regulation->year }}</p>
+                <p class="mb-1"><strong>Kategori:</strong> {{ $regulation->category }}</p>
                 <p class="text-muted">{{ $regulation->description }}</p>
+                <a class="btn btn-navy" href="{{ route('regulations.public.show',$regulation) }}">Lihat Detail</a>
             </div>
         </div>
     @endforeach
