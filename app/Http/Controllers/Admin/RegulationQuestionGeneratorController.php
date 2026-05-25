@@ -27,7 +27,7 @@ class RegulationQuestionGeneratorController extends Controller
             'exam_id' => ['required', 'exists:exams,id'],
             'exam_category_id' => ['required', 'exists:exam_categories,id'],
             'count' => ['required', 'integer', 'min:1', 'max:20'],
-            'difficulty' => ['required', 'in:easy,medium,hard,case'],
+            'difficulty' => ['required', 'in:easy,medium,hard,case,calculation'],
             'question_type' => ['required', 'string', 'max:100'],
             'page_from' => ['nullable', 'integer', 'min:1'],
             'page_until' => ['nullable', 'integer', 'min:1'],

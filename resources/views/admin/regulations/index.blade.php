@@ -7,13 +7,18 @@
         <div class="col-md-3"><input class="form-control" name="regulation_number" placeholder="Nomor regulasi"></div>
         <div class="col-md-2"><input class="form-control" name="year" type="number" placeholder="Tahun"></div>
         <div class="col-md-2"><select class="form-select" name="status"><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></div>
-        <div class="col-md-4"><input class="form-control" name="category" placeholder="Kategori regulasi"></div>
+        <div class="col-md-4"><input class="form-control" name="category" list="regulation-categories" placeholder="Kategori regulasi"></div>
         <div class="col-md-2"><input class="form-control" name="priority" placeholder="Prioritas"></div>
         <div class="col-md-6"><input class="form-control" type="file" name="file" accept=".pdf,.docx,.txt"></div>
         <div class="col-md-6"><textarea class="form-control" name="description" placeholder="Deskripsi"></textarea></div>
         <div class="col-md-6"><textarea class="form-control" name="usage_notes" placeholder="Catatan penggunaan untuk soal"></textarea></div>
         <div class="col-12"><button class="btn btn-navy">Upload Regulasi</button></div>
     </form>
+    <datalist id="regulation-categories">
+        @foreach(\App\Support\AsnCatalog::regulationCategories() as $category)
+            <option value="{{ $category }}"></option>
+        @endforeach
+    </datalist>
 </div>
 <div class="cat-card p-3 table-responsive">
     <table class="table align-middle">

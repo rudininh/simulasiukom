@@ -13,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         \App\Console\Commands\ExtractRegulationText::class,
         \App\Console\Commands\OcrRegulation::class,
+        \App\Console\Commands\SummarizeRegulation::class,
+        \App\Console\Commands\SyncExamCategories::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([

@@ -7,6 +7,7 @@ use App\Models\ExamCategory;
 use App\Models\Question;
 use App\Models\Regulation;
 use App\Models\User;
+use App\Support\AsnCatalog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -75,11 +76,32 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        foreach (AsnCatalog::defaultRegulations() as [$number, $year, $title, $category, $priority, $note]) {
+            Regulation::updateOrCreate([
+                'regulation_number' => $number,
+                'year' => $year,
+                'title' => $title,
+            ], [
+                'category' => $category,
+                'priority' => $priority,
+                'description' => $note,
+                'usage_notes' => $note,
+                'extracted_text' => $this->regulationSeedText($category, $number, $note),
+                'extraction_status' => 'extracted',
+                'extraction_method' => 'seed',
+                'extracted_at' => now(),
+                'summary' => "Pokok pengaturan: {$note}\nMateri potensial untuk soal: pemahaman ketentuan, prosedur administratif, penerapan aturan, dan studi kasus Manajemen ASN.",
+                'keywords' => array_values(array_filter([$category, $number])),
+                'status' => 'active',
+                'uploaded_by' => $admin->id,
+            ]);
+        }
+
         $exams = [
             ['Simulasi CAT Uji Kompetensi Jabatan Administrator', 90, 100, 70, 'Jabatan Administrator'],
             ['Simulasi CAT Uji Kompetensi Jabatan Pengawas', 90, 100, 70, 'Jabatan Pengawas'],
-            ['Simulasi CAT Uji Kompetensi Jabatan Fungsional Manajemen ASN', 75, 80, 70, 'Jabatan Fungsional Manajemen ASN'],
-            ['Simulasi CAT Uji Kompetensi Jabatan Pimpinan Tinggi Pratama', 120, 120, 75, 'Jabatan Pimpinan Tinggi Pratama'],
+            ['Simulasi CAT Uji Kompetensi Jabatan Fungsional Manajemen ASN', 75, 100, 70, 'Jabatan Fungsional Manajemen ASN'],
+            ['Simulasi CAT Uji Kompetensi Jabatan Pimpinan Tinggi Pratama', 120, 100, 75, 'Jabatan Pimpinan Tinggi Pratama'],
         ];
 
         foreach ($exams as [$title, $duration, $total, $passing, $type]) {
@@ -98,31 +120,22 @@ class DatabaseSeeder extends Seeder
         }
 
         $administrator = Exam::where('title', 'Simulasi CAT Uji Kompetensi Jabatan Administrator')->first();
-        if ($administrator->questions()->count() < 100) {
+        $hasFinalQuestionSet = $administrator->questions()
+            ->whereHas('category', fn ($query) => $query->where('code', 'ANGKA_KREDIT_JF'))
+            ->where('is_active', true)
+            ->exists();
+        if ($administrator->questions()->where('is_active', true)->count() < 100 || !$hasFinalQuestionSet) {
             $this->seedAdministratorQuestions($administrator, $regulation);
         }
     }
 
     private function seedCategories(Exam $exam, int $total): void
     {
-        $counts = $total === 100
-            ? [20, 20, 15, 15, 15, 15]
-            : [ceil($total * .20), ceil($total * .20), ceil($total * .15), floor($total * .15), floor($total * .15), $total - ceil($total * .20) - ceil($total * .20) - ceil($total * .15) - floor($total * .15) - floor($total * .15)];
-
-        $categories = [
-            ['REGULASI_ASN', 'Regulasi ASN', $counts[0]],
-            ['MANAJEMEN_ASN', 'Manajemen ASN', $counts[1]],
-            ['KEPEMIMPINAN', 'Kepemimpinan dan Manajerial', $counts[2]],
-            ['PELAYANAN_PUBLIK', 'Pelayanan Publik dan Etika Birokrasi', $counts[3]],
-            ['STUDI_KASUS', 'Studi Kasus Manajemen ASN', $counts[4]],
-            ['PERKAWINAN_PERCERAIAN_ASN', 'Perkawinan dan Perceraian ASN', $counts[5]],
-        ];
-
-        foreach ($categories as [$code, $name, $count]) {
-            ExamCategory::updateOrCreate(['exam_id' => $exam->id, 'code' => $code], [
+        foreach (AsnCatalog::examCategories() as $category) {
+            ExamCategory::updateOrCreate(['exam_id' => $exam->id, 'code' => $category['code']], [
                 'exam_id' => $exam->id,
-                'name' => $name,
-                'question_count' => $count,
+                'name' => $category['name'],
+                'question_count' => $category['question_count'],
                 'passing_score' => null,
                 'weight' => 1,
             ]);
@@ -131,7 +144,8 @@ class DatabaseSeeder extends Seeder
 
     private function seedAdministratorQuestions(Exam $exam, Regulation $regulation): void
     {
-        $categories = $exam->categories->keyBy('code');
+        $finalCodes = array_column(AsnCatalog::examCategories(), 'code');
+        $categories = $exam->categories()->whereIn('code', $finalCodes)->get()->keyBy('code');
         $divorceRegulation = Regulation::where('category', 'Perkawinan, Perceraian, dan Izin Keluarga ASN')->first() ?: $regulation;
         $topics = [
             'REGULASI_ASN' => [
@@ -142,34 +156,64 @@ class DatabaseSeeder extends Seeder
                 'perencanaan kebutuhan ASN', 'pengadaan ASN', 'pengembangan kompetensi', 'manajemen kinerja', 'promosi dan mutasi',
                 'disiplin ASN', 'pemberhentian ASN', 'digitalisasi manajemen ASN', 'talent management', 'penilaian kinerja',
             ],
-            'KEPEMIMPINAN' => [
+            'KINERJA_KOMPETENSI_ASN' => [
+                'sasaran kinerja pegawai', 'evaluasi kinerja periodik', 'pengembangan kompetensi', 'standar kompetensi jabatan', 'umpan balik kinerja',
+                'rencana hasil kerja', 'pemetaan kompetensi', 'coaching kinerja', 'penilaian perilaku kerja', 'kebutuhan kompetensi',
+            ],
+            'KEPEMIMPINAN_MANAJERIAL' => [
                 'pengambilan keputusan', 'manajemen perubahan', 'koordinasi lintas unit', 'komunikasi birokrasi', 'pengendalian tugas',
                 'delegasi pekerjaan', 'penyelesaian konflik', 'kepemimpinan sektor publik', 'orientasi hasil', 'kolaborasi',
             ],
-            'PELAYANAN_PUBLIK' => [
+            'PELAYANAN_PUBLIK_ETIKA' => [
                 'integritas', 'akuntabilitas', 'anti korupsi', 'konflik kepentingan', 'profesionalisme ASN',
                 'standar pelayanan', 'responsivitas layanan', 'transparansi', 'keadilan layanan', 'etika birokrasi',
             ],
-            'STUDI_KASUS' => [
-                'mutasi pegawai', 'disiplin ASN', 'konflik kepentingan', 'kinerja pegawai', 'pelayanan publik',
-                'penyalahgunaan wewenang', 'penempatan pegawai', 'evaluasi bawahan', 'keluhan masyarakat', 'koordinasi program',
+            'DISIPLIN_ETIKA_NETRALITAS' => [
+                'pelanggaran disiplin', 'netralitas ASN', 'kode etik', 'konflik kepentingan politik', 'penyalahgunaan wewenang',
+                'kepatuhan jam kerja', 'integritas aparatur', 'larangan menerima gratifikasi', 'pembinaan disiplin', 'etik birokrasi',
             ],
             'PERKAWINAN_PERCERAIAN_ASN' => [
                 'izin perkawinan PNS', 'izin perceraian PNS', 'surat keterangan perceraian', 'prosedur permohonan izin', 'pemeriksaan atasan',
                 'alasan perceraian', 'hak dan kewajiban PNS', 'dampak disiplin', 'studi kasus izin cerai ASN', 'kewenangan pejabat',
             ],
+            'PENSIUN_PEMBERHENTIAN_PNS' => [
+                'batas usia pensiun', 'pensiun janda/duda', 'pertimbangan teknis pensiun', 'pemberhentian dengan hormat', 'pemberhentian tidak dengan hormat',
+                'pemberhentian sementara', 'pengaktifan kembali', 'hak kepegawaian', 'kewenangan BKN', 'administrasi pensiun',
+            ],
+            'PENGADAAN_ASN' => [
+                'perencanaan kebutuhan ASN', 'pengadaan PNS', 'pengadaan PPPK', 'seleksi administrasi', 'seleksi kompetensi',
+                'CAT BKN', 'SKD dan SKB', 'penetapan NIP', 'penetapan NI PPPK', 'panitia seleksi',
+            ],
+            'CUTI_ASN' => [
+                'cuti tahunan', 'cuti besar', 'cuti sakit', 'cuti melahirkan', 'cuti alasan penting',
+                'cuti bersama', 'cuti di luar tanggungan negara', 'cuti PPPK', 'pejabat pemberi cuti', 'dokumen pendukung cuti',
+            ],
+            'PANGKAT_PROMOSI_MUTASI_KARIER' => [
+                'kenaikan pangkat reguler', 'kenaikan pangkat pilihan', 'periodisasi kenaikan pangkat', 'mutasi PNS', 'promosi jabatan',
+                'pola karier', 'manajemen talenta', 'talent pool', 'succession planning', 'standar kompetensi jabatan',
+            ],
+            'ANGKA_KREDIT_JF' => [
+                'angka kredit kumulatif', 'konversi predikat kinerja', 'kenaikan jenjang JF', 'kenaikan pangkat JF', 'angka kredit tambahan',
+                'angka kredit pemeliharaan', 'PAK', 'kebutuhan angka kredit', 'perhitungan selisih angka kredit', 'kelayakan naik jenjang',
+            ],
         ];
 
         $order = 1;
         foreach ($categories as $code => $category) {
-            for ($i = 1; $i <= $category->question_count; $i++) {
+            $existingActive = $category->questions()->where('is_active', true)->count();
+            for ($i = $existingActive + 1; $i <= $category->question_count; $i++) {
                 $topic = $topics[$code][($i - 1) % count($topics[$code])];
                 if ($code === 'PERKAWINAN_PERCERAIAN_ASN') {
                     $this->createDivorceQuestion($exam, $category, $divorceRegulation, $order++, $i, true);
                     continue;
                 }
 
-                $casePrefix = $code === 'STUDI_KASUS'
+                if ($code === 'ANGKA_KREDIT_JF' && $i <= 10) {
+                    $this->createCreditQuestion($exam, $category, $order++, $i);
+                    continue;
+                }
+
+                $casePrefix = in_array($code, ['DISIPLIN_ETIKA_NETRALITAS', 'KINERJA_KOMPETENSI_ASN'], true)
                     ? "Seorang pejabat administrator menghadapi kasus {$topic} di unit kerjanya."
                     : "Dalam konteks {$topic},";
 
@@ -187,7 +231,8 @@ class DatabaseSeeder extends Seeder
                     'explanation' => 'Prinsip manajemen ASN menekankan objektivitas, sistem merit, akuntabilitas, integritas, dan kesesuaian dengan kebutuhan organisasi.',
                     'source_reference' => 'UU ASN Tahun 2023',
                     'score' => 1,
-                    'difficulty' => $code === 'STUDI_KASUS' ? 'case' : (($i % 3 === 0) ? 'hard' : (($i % 2 === 0) ? 'medium' : 'easy')),
+                    'question_type' => str_contains($casePrefix, 'kasus') ? 'Analisis kasus' : 'Pemahaman konsep',
+                    'difficulty' => str_contains($casePrefix, 'kasus') ? 'case' : (($i % 3 === 0) ? 'hard' : (($i % 2 === 0) ? 'medium' : 'easy')),
                     'order_number' => $order++,
                     'is_active' => true,
                 ]);
@@ -279,5 +324,38 @@ class DatabaseSeeder extends Seeder
             'order_number' => $order,
             'is_active' => $active,
         ]);
+    }
+
+    private function createCreditQuestion(Exam $exam, ExamCategory $category, int $order, int $index): void
+    {
+        $last = 70 + ($index * 5);
+        $target = $last + 25;
+        $earned = 9 + $index;
+        $gap = $target - ($last + $earned);
+
+        Question::create([
+            'exam_id' => $exam->id,
+            'exam_category_id' => $category->id,
+            'regulation_id' => Regulation::where('regulation_number', 'Peraturan BKN Nomor 3 Tahun 2023')->value('id'),
+            'question_text' => "Seorang pejabat fungsional memiliki Angka Kredit terakhir sebesar {$last}. Untuk memenuhi kebutuhan Angka Kredit kumulatif {$target}, pada tahun berjalan ia memperoleh tambahan Angka Kredit {$earned}. Berapa kekurangan Angka Kredit yang masih harus dipenuhi?",
+            'option_a' => (string) max(0, $gap - 5),
+            'option_b' => (string) max(0, $gap - 2),
+            'option_c' => (string) $gap,
+            'option_d' => (string) ($gap + 3),
+            'option_e' => (string) ($gap + 6),
+            'correct_answer' => 'C',
+            'explanation' => "Total Angka Kredit = {$last} + {$earned} = ".($last + $earned).". Kebutuhan Angka Kredit = {$target}. Kekurangan = {$target} - ".($last + $earned)." = {$gap}.",
+            'source_reference' => 'Peraturan BKN Nomor 3 Tahun 2023',
+            'question_type' => 'Hitungan angka kredit',
+            'score' => 1,
+            'difficulty' => 'calculation',
+            'order_number' => $order,
+            'is_active' => true,
+        ]);
+    }
+
+    private function regulationSeedText(string $category, string $number, string $note): string
+    {
+        return "{$number} menjadi bahan regulasi kategori {$category}. {$note} Materi soal dapat mencakup pengertian, kewenangan pejabat, prosedur administratif, dokumen pendukung, batasan, hak dan kewajiban ASN, serta studi kasus penerapan aturan dalam pengelolaan Manajemen ASN.";
     }
 }

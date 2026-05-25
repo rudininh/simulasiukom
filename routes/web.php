@@ -47,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/peserta', [AdminController::class, 'users'])->name('users');
     Route::get('/exams', [AdminController::class, 'exams'])->name('exams.index');
     Route::post('/exams', [AdminController::class, 'storeExam'])->name('exams.store');
+    Route::post('/exams/sync-categories', [AdminController::class, 'syncExamCategories'])->name('exams.sync-categories');
     Route::put('/exams/{exam}', [AdminController::class, 'updateExam'])->name('exams.update');
     Route::delete('/exams/{exam}', [AdminController::class, 'destroyExam'])->name('exams.destroy');
     Route::get('/categories', [AdminController::class, 'categories'])->name('categories.index');
@@ -78,6 +79,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/question-generator/generate', [AdminController::class, 'generateQuestions'])->name('question-generator.generate');
     Route::get('/generated-questions', [AdminController::class, 'generatedQuestions'])->name('generated-questions.index');
     Route::post('/generated-questions/bulk', [AdminController::class, 'bulkGeneratedQuestions'])->name('generated-questions.bulk');
+    Route::post('/generated-questions/bulk-approve', [AdminController::class, 'bulkApproveGeneratedQuestions'])->name('generated-questions.bulk-approve');
+    Route::post('/generated-questions/bulk-reject', [AdminController::class, 'bulkRejectGeneratedQuestions'])->name('generated-questions.bulk-reject');
+    Route::delete('/generated-questions/bulk-delete', [AdminController::class, 'bulkDeleteGeneratedQuestions'])->name('generated-questions.bulk-delete');
     Route::get('/generated-questions/{generatedQuestion}/edit', [AdminController::class, 'editGeneratedQuestion'])->name('generated-questions.edit');
     Route::put('/generated-questions/{generatedQuestion}', [AdminController::class, 'updateGeneratedQuestion'])->name('generated-questions.update');
     Route::post('/generated-questions/{generatedQuestion}/approve', [AdminController::class, 'approveGeneratedQuestion'])->name('generated-questions.approve');

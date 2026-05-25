@@ -148,6 +148,8 @@ Ringkasan regulasi dapat dibuat dari tombol `Generate Ringkasan Regulasi`. Untuk
 
 Jika kategori yang dipilih adalah `PERKAWINAN_PERCERAIAN_ASN`, prompt generator otomatis memakai fokus izin perkawinan, izin perceraian, surat keterangan, pemeriksaan pejabat, kewenangan pejabat, konsekuensi disiplin, dan studi kasus administrasi kepegawaian.
 
+Prompt khusus juga tersedia untuk `ANGKA_KREDIT_JF`, `PENSIUN_PEMBERHENTIAN_PNS`, `PENGADAAN_ASN`, `CUTI_ASN`, dan `PANGKAT_PROMOSI_MUTASI_KARIER`. Untuk `ANGKA_KREDIT_JF`, tipe `Hitungan angka kredit` membuat pembahasan berisi langkah perhitungan.
+
 ### Review Draft Soal AI
 
 Halaman `/admin/generated-questions` menyediakan filter regulasi, ujian, kategori, kesulitan, tipe soal, status approval, status validasi, dan keyword. Admin dapat:
@@ -182,7 +184,56 @@ Format kolom:
 exam_title,category_code,question_text,option_a,option_b,option_c,option_d,option_e,correct_answer,explanation,source_reference,score,difficulty
 ```
 
-Contoh `category_code`: `REGULASI_ASN`, `MANAJEMEN_ASN`, `KEPEMIMPINAN`, `PELAYANAN_PUBLIK`, `STUDI_KASUS`, `PERKAWINAN_PERCERAIAN_ASN`.
+Contoh `category_code`: `REGULASI_ASN`, `MANAJEMEN_ASN`, `KINERJA_KOMPETENSI_ASN`, `KEPEMIMPINAN_MANAJERIAL`, `PELAYANAN_PUBLIK_ETIKA`, `DISIPLIN_ETIKA_NETRALITAS`, `PERKAWINAN_PERCERAIAN_ASN`, `PENSIUN_PEMBERHENTIAN_PNS`, `PENGADAAN_ASN`, `CUTI_ASN`, `PANGKAT_PROMOSI_MUTASI_KARIER`, `ANGKA_KREDIT_JF`.
+
+## Sinkronisasi Kategori dan Komposisi 100 Soal
+
+Jalankan command berikut setelah update aplikasi atau setelah menambah course baru:
+
+```bash
+php artisan exam:sync-categories
+```
+
+Command ini menambahkan 12 kategori final ke setiap course aktif dan menyetel total komposisi menjadi 100 soal:
+- Regulasi ASN: 8
+- Manajemen ASN: 8
+- Kinerja dan Kompetensi ASN: 8
+- Kepemimpinan dan Manajerial: 7
+- Pelayanan Publik dan Etika Birokrasi: 7
+- Disiplin, Etika, dan Netralitas ASN: 7
+- Perkawinan dan Perceraian ASN: 6
+- Pensiun dan Pemberhentian PNS: 7
+- Pengadaan ASN: 8
+- Cuti ASN: 7
+- Pangkat, Promosi, Mutasi, dan Karier ASN: 12
+- Angka Kredit dan Kenaikan Jenjang Jabatan Fungsional: 15
+
+Admin tetap bisa mengubah jumlah soal per kategori dari menu `Kategori Ujian`.
+
+## Regulasi Default Tambahan
+
+Seeder menambahkan regulasi default baru tanpa duplikasi untuk materi:
+- Pensiun dan Pemberhentian PNS.
+- Pengadaan PNS dan PPPK.
+- Cuti PNS dan PPPK.
+- Pangkat, Promosi, Mutasi, dan Karier ASN.
+- Angka Kredit dan Kenaikan Jenjang Jabatan Fungsional.
+
+Regulasi tersebut tampil di Bank Regulasi dengan kategori, prioritas, catatan penggunaan soal, ringkasan, dan kata kunci awal. Admin dapat mengganti data seed ini dengan upload PDF resmi, lalu menjalankan ekstraksi/OCR.
+
+## Command Regulasi
+
+```bash
+php artisan regulation:extract {regulation_id}
+php artisan regulation:ocr {regulation_id}
+php artisan regulation:summarize {regulation_id}
+```
+
+`regulation:extract` membaca TXT/DOCX/PDF text-based. Jika PDF tidak memiliki teks yang cukup, status regulasi menjadi `need_ocr`. `regulation:ocr` menjalankan OCR PDF scan menggunakan Tesseract dan Poppler. `regulation:summarize` membuat ringkasan dari hasil ekstraksi/OCR.
+
+## Scoring Dinamis per Kategori
+
+Saat ujian selesai, sistem mengisi tabel `exam_attempt_category_scores` berdasarkan kategori pada database. Halaman hasil, cetak hasil, riwayat, dan rekap admin membaca skor kategori dari tabel ini, sehingga penambahan kategori baru tidak perlu hardcode ulang di halaman hasil.
 
 ## Admin Panel
 

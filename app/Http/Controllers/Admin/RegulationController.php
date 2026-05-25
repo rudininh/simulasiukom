@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Regulation;
 use App\Services\RegulationOcrService;
+use App\Services\RegulationSummaryService;
 use App\Services\RegulationTextExtractorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -117,9 +118,9 @@ class RegulationController extends Controller
             ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
     }
 
-    public function summarize(Regulation $regulation, RegulationTextExtractorService $extractor)
+    public function summarize(Regulation $regulation, RegulationSummaryService $summary)
     {
-        $extractor->summarize($regulation);
+        $summary->summarize($regulation);
         return back()->with('success', 'Ringkasan regulasi berhasil dibuat.');
     }
 

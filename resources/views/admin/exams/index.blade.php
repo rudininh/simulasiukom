@@ -1,6 +1,11 @@
 @extends('layouts.admin')
 @section('admin-content')
-<h1 class="page-title mb-4">CRUD Ujian</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+    <h1 class="page-title mb-0">CRUD Ujian</h1>
+    <form method="post" action="{{ route('admin.exams.sync-categories') }}">@csrf
+        <button class="btn btn-warning"><i class="fa-solid fa-rotate me-1"></i> Sinkron Kategori 100 Soal</button>
+    </form>
+</div>
 <div class="cat-card p-3 mb-4">
 <form method="post" action="{{ route('admin.exams.store') }}" class="row g-2">@csrf
     <div class="col-md-6"><input class="form-control" name="title" placeholder="Nama ujian" required></div>

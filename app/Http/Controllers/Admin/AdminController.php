@@ -12,6 +12,7 @@ use App\Models\Regulation;
 use App\Models\User;
 use App\Services\QuestionGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -28,6 +29,26 @@ class AdminController extends Controller
             'attempts' => ExamAttempt::whereIn('status', ['finished', 'expired'])->count(),
             'kompeten' => ExamAttempt::where('competency_status', 'kompeten')->count(),
             'belumKompeten' => ExamAttempt::where('competency_status', 'belum_kompeten')->count(),
+            'questionsByCategory' => Question::query()
+                ->select('exam_categories.name', DB::raw('count(*) as total'))
+                ->join('exam_categories', 'questions.exam_category_id', '=', 'exam_categories.id')
+                ->groupBy('exam_categories.name')
+                ->orderBy('exam_categories.name')
+                ->get(),
+            'regulationsByCategory' => Regulation::query()
+                ->select('category', DB::raw('count(*) as total'))
+                ->whereNotNull('category')
+                ->groupBy('category')
+                ->orderBy('category')
+                ->get(),
+            'draftsByCategory' => GeneratedQuestion::query()
+                ->select('exam_categories.name', DB::raw('count(*) as total'))
+                ->join('exam_categories', 'generated_questions.exam_category_id', '=', 'exam_categories.id')
+                ->where('generated_questions.status', 'draft')
+                ->groupBy('exam_categories.name')
+                ->orderBy('exam_categories.name')
+                ->get(),
+            'readyRegulations' => Regulation::whereNotNull('extracted_text')->where('extracted_text', '<>', '')->count(),
         ]);
     }
 
@@ -238,7 +259,7 @@ class AdminController extends Controller
             'exam_id' => ['required', 'exists:exams,id'],
             'exam_category_id' => ['required', 'exists:exam_categories,id'],
             'count' => ['required', 'integer', 'min:1', 'max:20'],
-            'difficulty' => ['required', 'in:easy,medium,hard,case'],
+            'difficulty' => ['required', 'in:easy,medium,hard,case,calculation'],
             'question_type' => ['required', 'string', 'max:100'],
         ]);
 
@@ -362,6 +383,24 @@ class AdminController extends Controller
         return back()->with('success', 'Aksi bulk draft soal selesai diproses.');
     }
 
+    public function bulkApproveGeneratedQuestions(Request $request)
+    {
+        $request->merge(['action' => 'approve']);
+        return $this->bulkGeneratedQuestions($request);
+    }
+
+    public function bulkRejectGeneratedQuestions(Request $request)
+    {
+        $request->merge(['action' => 'reject']);
+        return $this->bulkGeneratedQuestions($request);
+    }
+
+    public function bulkDeleteGeneratedQuestions(Request $request)
+    {
+        $request->merge(['action' => 'delete']);
+        return $this->bulkGeneratedQuestions($request);
+    }
+
     public function attempts()
     {
         return view('admin.attempts.index', [
@@ -437,7 +476,7 @@ class AdminController extends Controller
             'question_type' => ['nullable', 'string', 'max:100'],
             'source_page' => ['nullable', 'integer', 'min:1'],
             'score' => ['required', 'integer', 'min:0'],
-            'difficulty' => ['required', 'in:easy,medium,hard,case'],
+            'difficulty' => ['required', 'in:easy,medium,hard,case,calculation'],
             'order_number' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -470,6 +509,12 @@ class AdminController extends Controller
         }
 
         $regulation->update(['extracted_text' => $this->cleanExtractedText($content ?: $regulation->description)]);
+    }
+
+    public function syncExamCategories()
+    {
+        \Illuminate\Support\Facades\Artisan::call('exam:sync-categories');
+        return back()->with('success', trim(\Illuminate\Support\Facades\Artisan::output()) ?: 'Kategori course berhasil disinkronkan.');
     }
 
     private function cleanExtractedText(?string $text): ?string

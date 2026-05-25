@@ -123,10 +123,14 @@ class AttemptController extends Controller
             $attempt->load('answers.question.category', 'exam.categories.questions');
             $categoryStats = [];
             foreach ($attempt->exam->categories as $category) {
+                $activeQuestionCount = $category->questions()->where('is_active', true)->count();
+                if ($activeQuestionCount === 0) {
+                    continue;
+                }
                 $categoryStats[$category->id] = [
                     'category' => $category,
                     'score' => 0,
-                    'total_questions' => $category->questions()->where('is_active', true)->count(),
+                    'total_questions' => $activeQuestionCount,
                     'total_answered' => 0,
                     'total_correct' => 0,
                     'total_wrong' => 0,
@@ -174,9 +178,9 @@ class AttemptController extends Controller
                 'duration_seconds' => $attempt->started_at->diffInSeconds($attempt->finished_at ?: $finishedAt),
                 'score_regulasi_asn' => $legacyScore('REGULASI_ASN'),
                 'score_manajemen_asn' => $legacyScore('MANAJEMEN_ASN'),
-                'score_kepemimpinan' => $legacyScore('KEPEMIMPINAN'),
-                'score_pelayanan_publik' => $legacyScore('PELAYANAN_PUBLIK'),
-                'score_studi_kasus' => $legacyScore('STUDI_KASUS'),
+                'score_kepemimpinan' => $legacyScore('KEPEMIMPINAN_MANAJERIAL') ?: $legacyScore('KEPEMIMPINAN'),
+                'score_pelayanan_publik' => $legacyScore('PELAYANAN_PUBLIK_ETIKA') ?: $legacyScore('PELAYANAN_PUBLIK'),
+                'score_studi_kasus' => $legacyScore('KINERJA_KOMPETENSI_ASN') ?: $legacyScore('STUDI_KASUS'),
                 'score_perkawinan_perceraian_asn' => $legacyScore('PERKAWINAN_PERCERAIAN_ASN'),
                 'score_total' => $total,
                 'total_answered' => $answered,

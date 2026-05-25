@@ -94,7 +94,7 @@ return new class extends Migration
             $table->string('question_type')->nullable();
             $table->unsignedInteger('source_page')->nullable();
             $table->unsignedInteger('score')->default(1);
-            $table->enum('difficulty', ['easy', 'medium', 'hard', 'case'])->default('medium');
+            $table->enum('difficulty', ['easy', 'medium', 'hard', 'case', 'calculation'])->default('medium');
             $table->unsignedInteger('order_number')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

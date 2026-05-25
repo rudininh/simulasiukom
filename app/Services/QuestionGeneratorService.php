@@ -36,7 +36,7 @@ class QuestionGeneratorService
                 'option_e' => $item['option_e'],
                 'correct_answer' => $item['correct_answer'],
                 'explanation' => $item['explanation'] ?? 'Pembahasan belum tersedia.',
-                'source_reference' => $item['source_reference'] ?? 'Rujukan belum terdeteksi',
+                'source_reference' => !empty($item['source_reference']) ? $item['source_reference'] : 'Rujukan belum terdeteksi',
                 'source_page' => $item['source_page'] ?? $sourcePage,
                 'source_chunk_index' => $chunkIndex,
                 'difficulty' => $item['difficulty'] ?? $difficulty,
@@ -55,9 +55,8 @@ class QuestionGeneratorService
 
     private function generateWithOpenAi(string $text, string $category, string $categoryCode, int $count, string $difficulty, string $questionType, ?string $keywords): array
     {
-        if ($categoryCode === 'PERKAWINAN_PERCERAIAN_ASN') {
-            $prompt = $this->divorcePrompt($text, $category, $count, $difficulty, $questionType, $keywords);
-        } else {
+        $prompt = $this->specialPrompt($categoryCode, $text, $category, $count, $difficulty, $questionType, $keywords);
+        if (!$prompt) {
         $prompt = <<<PROMPT
 Kamu adalah penyusun soal simulasi CAT untuk Uji Kompetensi Jabatan Manajemen ASN.
 
@@ -134,8 +133,31 @@ PROMPT;
     {
         $items = [];
         $basis = Str::limit($text ?: 'regulasi ASN dan prinsip manajemen ASN', 160);
-        $isDivorce = str_contains(mb_strtolower($category.' '.$keywords.' '.$regulation->title), 'perceraian') || str_contains(mb_strtolower($category), 'perkawinan');
+        $context = mb_strtolower($category.' '.$keywords.' '.$regulation->title);
+        $isDivorce = str_contains($context, 'perceraian') || str_contains($context, 'perkawinan');
+        $isCredit = str_contains($context, 'angka kredit') || str_contains($context, 'jabatan fungsional');
         for ($i = 1; $i <= $count; $i++) {
+            if ($isCredit || $questionType === 'Hitungan angka kredit') {
+                $last = 80 + ($i * 3);
+                $target = $last + 20;
+                $earned = 8 + $i;
+                $gap = max(0, $target - ($last + $earned));
+                $items[] = [
+                    'question_text' => "Seorang pejabat fungsional memiliki Angka Kredit terakhir {$last}. Untuk memenuhi kebutuhan kumulatif {$target}, ia memperoleh tambahan Angka Kredit {$earned}. Berapa kekurangan Angka Kredit yang masih harus dipenuhi?",
+                    'option_a' => (string) max(0, $gap - 4),
+                    'option_b' => (string) max(0, $gap - 2),
+                    'option_c' => (string) $gap,
+                    'option_d' => (string) ($gap + 3),
+                    'option_e' => (string) ($gap + 6),
+                    'correct_answer' => 'C',
+                    'explanation' => "Total Angka Kredit = {$last} + {$earned} = ".($last + $earned).". Kebutuhan = {$target}. Kekurangan = {$target} - ".($last + $earned)." = {$gap}.",
+                    'source_reference' => $regulation->regulation_number ?: 'Rujukan belum terdeteksi',
+                    'difficulty' => $difficulty,
+                    'question_type' => 'Hitungan angka kredit',
+                ];
+                continue;
+            }
+
             $items[] = $isDivorce
                 ? [
                     'question_text' => "Berdasarkan {$regulation->title}, tindakan pejabat yang paling tepat saat menerima permohonan izin cerai PNS pada kasus nomor {$i} adalah ...",
@@ -209,7 +231,7 @@ PROMPT;
             }
 
             $item['explanation'] = $item['explanation'] ?? 'Pembahasan belum tersedia.';
-            $item['source_reference'] = $item['source_reference'] ?? 'Rujukan belum terdeteksi';
+            $item['source_reference'] = !empty($item['source_reference']) ? $item['source_reference'] : 'Rujukan belum terdeteksi';
             $item['validation_status'] = $status;
             $item['validation_notes'] = implode('; ', $notes) ?: null;
             $validated[] = $item;
@@ -273,6 +295,73 @@ Kembalikan hanya JSON valid dengan format:
     "source_reference": "...",
     "difficulty": "...",
     "question_type": "..."
+  }
+]
+PROMPT;
+    }
+
+    private function specialPrompt(string $categoryCode, string $text, string $category, int $count, string $difficulty, string $questionType, ?string $keywords): ?string
+    {
+        $focus = match ($categoryCode) {
+            'ANGKA_KREDIT_JF' => "- Angka Kredit Jabatan Fungsional\n- Angka Kredit kumulatif\n- Konversi predikat kinerja ke Angka Kredit\n- Kebutuhan Angka Kredit untuk kenaikan jenjang\n- Kebutuhan Angka Kredit untuk kenaikan pangkat\n- Angka Kredit tambahan\n- Angka Kredit pemeliharaan\n- Kenaikan jenjang Jabatan Fungsional\n- Kenaikan pangkat Jabatan Fungsional\n- Simulasi perhitungan Angka Kredit\n- Studi kasus PAK\n- Analisis kelayakan naik jenjang atau naik pangkat",
+            'PENSIUN_PEMBERHENTIAN_PNS' => "- Batas usia pensiun\n- Pensiun PNS\n- Pensiun janda/duda\n- Pemberhentian dengan hormat\n- Pemberhentian tidak dengan hormat\n- Pemberhentian sementara\n- Pengaktifan kembali\n- Pertimbangan teknis pensiun\n- Kewenangan BKN/Kanreg BKN\n- Studi kasus pemberhentian PNS",
+            'PENGADAAN_ASN' => "- Perencanaan kebutuhan ASN\n- Pengadaan PNS\n- Pengadaan PPPK\n- Seleksi administrasi\n- Seleksi kompetensi\n- CAT BKN\n- SKD\n- SKB\n- Pengangkatan CPNS\n- Pengangkatan PPPK\n- Penetapan NIP/NI PPPK\n- Kewenangan panitia pengadaan\n- Studi kasus pengadaan ASN",
+            'CUTI_ASN' => "- Cuti PNS\n- Cuti PPPK\n- Cuti tahunan\n- Cuti besar\n- Cuti sakit\n- Cuti melahirkan\n- Cuti karena alasan penting\n- Cuti bersama\n- Cuti di luar tanggungan negara\n- Pejabat berwenang memberikan cuti\n- Dokumen pendukung cuti\n- Perbedaan cuti PNS dan PPPK\n- Studi kasus cuti ASN",
+            'PANGKAT_PROMOSI_MUTASI_KARIER' => "- Pangkat dan golongan ruang\n- Kenaikan pangkat reguler\n- Kenaikan pangkat pilihan\n- Periodisasi kenaikan pangkat\n- Promosi jabatan\n- Mutasi\n- Pola karier\n- Manajemen talenta\n- Sistem merit\n- Standar kompetensi jabatan\n- Talent pool\n- Succession planning\n- Konflik kepentingan dalam promosi\n- Studi kasus promosi/mutasi ASN",
+            'PERKAWINAN_PERCERAIAN_ASN' => "- Izin perkawinan PNS\n- Izin perceraian PNS\n- Surat keterangan perceraian\n- Prosedur permohonan izin\n- Pemeriksaan oleh atasan/pejabat\n- Konsekuensi disiplin\n- Studi kasus izin cerai ASN",
+            default => null,
+        };
+
+        if (!$focus) {
+            return null;
+        }
+
+        $extra = $categoryCode === 'ANGKA_KREDIT_JF'
+            ? "\nKetentuan khusus:\n- Jika membuat soal hitungan, angka dalam soal harus konsisten.\n- Pembahasan harus menunjukkan langkah perhitungan.\n- Pastikan hanya ada satu jawaban benar.\n- Jangan membuat rumus yang tidak ada dasar regulasinya.\n- Jika regulasi tidak memuat angka spesifik, buat soal berbasis konsep/prosedur, bukan mengarang angka.\n"
+            : '';
+
+        return <<<PROMPT
+Kamu adalah penyusun soal simulasi CAT untuk Uji Kompetensi Jabatan Manajemen ASN.
+
+Buat soal pilihan ganda berbasis regulasi untuk kategori {$category}.
+
+Fokus materi:
+{$focus}
+{$extra}
+Ketentuan:
+- Bahasa Indonesia formal.
+- Cocok untuk uji kompetensi Manajemen ASN.
+- Soal tidak boleh keluar dari isi regulasi.
+- Buat opsi A sampai E.
+- Hanya ada satu jawaban paling tepat.
+- Sertakan pembahasan singkat.
+- Sertakan rujukan pasal/ayat/bagian jika dapat ditemukan.
+- Jangan membuat soal yang terlalu mudah ditebak.
+
+Parameter:
+Kategori: {$category}
+Jumlah soal: {$count}
+Tingkat kesulitan: {$difficulty}
+Tipe soal: {$questionType}
+Fokus kata kunci: {$keywords}
+
+Teks regulasi:
+{$text}
+
+Kembalikan hanya JSON valid dengan format:
+[
+  {
+    "question_text": "...",
+    "option_a": "...",
+    "option_b": "...",
+    "option_c": "...",
+    "option_d": "...",
+    "option_e": "...",
+    "correct_answer": "A",
+    "explanation": "...",
+    "source_reference": "...",
+    "difficulty": "...",
+    "question_type": "{$questionType}"
   }
 ]
 PROMPT;
