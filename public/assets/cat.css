@@ -15,6 +15,22 @@ body {
     font-family: Arial, "Inter", "Poppins", sans-serif;
 }
 
+.app-footer {
+    color: #5d6878;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 36px auto 24px;
+    max-width: 1200px;
+    padding: 0 18px;
+    text-align: center;
+}
+.app-footer a {
+    color: var(--navy-dark);
+    font-weight: 700;
+    text-decoration: none;
+}
+.app-footer a:hover { text-decoration: underline; }
+
 .top-strip { height: 5px; background: #3d3d3d; }
 .cat-header {
     min-height: 84px;
@@ -60,7 +76,14 @@ body {
     min-height: 100vh; background: linear-gradient(90deg, #365a7a, #2f5da4);
     display: flex; align-items: center; justify-content: center; padding: 40px 16px;
 }
+.login-stack { width: 450px; max-width: 100%; }
 .login-card { width: 450px; max-width: 100%; background: #fff; border-radius: 14px; padding: 40px; }
+.app-footer-auth {
+    color: rgba(255,255,255,.82);
+    margin: 20px auto 0;
+    padding: 0;
+}
+.app-footer-auth a { color: #fff; }
 .captcha-code {
     min-width: 120px; height: 40px; border-radius: 6px; border: 1px solid #d6dce4;
     display: inline-flex; align-items: center; justify-content: center;

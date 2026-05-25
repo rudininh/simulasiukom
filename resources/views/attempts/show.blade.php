@@ -76,6 +76,10 @@
         </div>
     </div>
 </div>
+<footer class="app-footer">
+    <div>Dibuat oleh Rudini</div>
+    <div>Open Source: <a href="https://github.com/rudininh/antrian-bkpsdm" target="_blank" rel="noopener">github.com/rudininh/antrian-bkpsdm</a></div>
+</footer>
 <div class="modal fade" id="finishModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

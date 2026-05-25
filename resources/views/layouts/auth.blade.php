@@ -10,7 +10,15 @@
 </head>
 <body>
 <div class="top-strip"></div>
-<main class="login-page">@yield('content')</main>
+<main class="login-page">
+    <div class="login-stack">
+        @yield('content')
+        <footer class="app-footer app-footer-auth">
+            <div>Dibuat oleh Rudini</div>
+            <div>Open Source: <a href="https://github.com/rudininh/antrian-bkpsdm" target="_blank" rel="noopener">github.com/rudininh/antrian-bkpsdm</a></div>
+        </footer>
+    </div>
+</main>
 <script>
 function togglePassword(id){ const input=document.getElementById(id); input.type=input.type==='password'?'text':'password'; }
 async function refreshCaptcha(){ const response=await fetch('{{ route('captcha.refresh') }}',{headers:{Accept:'application/json'}}); const data=await response.json(); document.getElementById('captcha-code').textContent=data.code; }
