@@ -15,6 +15,26 @@ php artisan serve
 
 Buat database MySQL `simulasiukom`, atau sesuaikan konfigurasi `DB_*` di `.env`.
 
+## Local Domain Laragon
+
+Project disiapkan untuk URL:
+
+```text
+http://simulasiukom.test
+```
+
+Jika domain belum terbuka, pastikan entry berikut ada di `C:\Windows\System32\drivers\etc\hosts` dengan hak Administrator:
+
+```text
+127.0.0.1      simulasiukom.test
+```
+
+Vhost Apache Laragon mengarah ke:
+
+```text
+C:/laragon/www/simulasiukom/public
+```
+
 ## Akun Default
 
 - Admin: `admin@example.com` / `password`
