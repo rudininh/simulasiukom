@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'quick_login' => env('AUTH_QUICK_LOGIN', true),
+
 ];

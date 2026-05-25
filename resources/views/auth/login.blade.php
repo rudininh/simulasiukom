@@ -4,9 +4,21 @@
     <div class="text-center mb-4">
         <div class="brand-logo mx-auto mb-3" style="width:96px;height:96px;">CAT</div>
         <h1 class="h4 fw-bold text-primary-emphasis">SIMULASI CAT UJI KOMPETENSI MANAJEMEN ASN</h1>
-        <p class="text-muted small">Silakan masukkan username dan password Anda</p>
+        <p class="text-muted small">{{ $quickLogin ? 'Silakan pilih mode akses aplikasi' : 'Silakan masukkan username dan password Anda' }}</p>
     </div>
     @if ($errors->any()) <div class="alert alert-danger py-2">{{ $errors->first() }}</div> @endif
+    @if ($quickLogin)
+        <div class="d-grid gap-3">
+            <form method="post" action="{{ route('quick-login', 'admin') }}">
+                @csrf
+                <button class="btn btn-navy btn-lg w-100 py-3"><i class="fa-solid fa-user-shield me-2"></i>LOGIN SEBAGAI ADMIN</button>
+            </form>
+            <form method="post" action="{{ route('quick-login', 'peserta') }}">
+                @csrf
+                <button class="btn btn-success btn-lg w-100 py-3"><i class="fa-solid fa-circle-user me-2"></i>LOGIN SEBAGAI USER</button>
+            </form>
+        </div>
+    @else
     <form method="post" action="{{ url('/login') }}">
         @csrf
         <label class="form-label fw-bold small"><i class="fa-solid fa-user me-2 text-primary-emphasis"></i> Username / Email</label>
@@ -31,5 +43,6 @@
         <a href="{{ route('register') }}" class="btn btn-success btn-lg w-100"><i class="fa-solid fa-user-plus me-2"></i>DAFTAR SIMULASI</a>
         <p class="text-center small text-muted mt-3 mb-0">Belum punya akun? Daftar sekarang untuk mengikuti Simulasi CAT Manajemen ASN</p>
     </form>
+    @endif
 </div>
 @endsection

@@ -12,8 +12,11 @@ class AuthController extends Controller
 {
     public function showLogin(Request $request)
     {
-        $this->refreshCaptcha($request);
-        return view('auth.login');
+        if (!config('app.quick_login')) {
+            $this->refreshCaptcha($request);
+        }
+
+        return view('auth.login', ['quickLogin' => config('app.quick_login')]);
     }
 
     public function login(Request $request)
@@ -37,6 +40,18 @@ class AuthController extends Controller
 
         $this->refreshCaptcha($request);
         return back()->withErrors(['login' => 'Username/email atau password salah.'])->withInput();
+    }
+
+    public function quickLogin(Request $request, string $role)
+    {
+        abort_unless(config('app.quick_login'), 404);
+        abort_unless(in_array($role, ['admin', 'peserta'], true), 404);
+
+        $user = User::where('role', $role)->firstOrFail();
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        return $user->isAdmin() ? redirect('/admin') : redirect('/dashboard');
     }
 
     public function refreshCaptcha(Request $request)
