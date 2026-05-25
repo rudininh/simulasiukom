@@ -78,7 +78,7 @@
 </div>
 <footer class="app-footer">
     <div>Dibuat oleh Rudini</div>
-    <div>Open Source: <a href="https://github.com/rudininh/antrian-bkpsdm" target="_blank" rel="noopener">github.com/rudininh/antrian-bkpsdm</a></div>
+    <div>Open Source: <a href="https://github.com/rudininh/simulasiukom" target="_blank" rel="noopener">github.com/rudininh/simulasiukom</a></div>
 </footer>
 <div class="modal fade" id="finishModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">

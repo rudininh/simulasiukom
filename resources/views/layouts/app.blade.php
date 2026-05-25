@@ -42,7 +42,7 @@
 </main>
 <footer class="app-footer">
     <div>Dibuat oleh Rudini</div>
-    <div>Open Source: <a href="https://github.com/rudininh/antrian-bkpsdm" target="_blank" rel="noopener">github.com/rudininh/antrian-bkpsdm</a></div>
+    <div>Open Source: <a href="https://github.com/rudininh/simulasiukom" target="_blank" rel="noopener">github.com/rudininh/simulasiukom</a></div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 @stack('scripts')

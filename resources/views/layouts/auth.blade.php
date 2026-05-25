@@ -15,7 +15,7 @@
         @yield('content')
         <footer class="app-footer app-footer-auth">
             <div>Dibuat oleh Rudini</div>
-            <div>Open Source: <a href="https://github.com/rudininh/antrian-bkpsdm" target="_blank" rel="noopener">github.com/rudininh/antrian-bkpsdm</a></div>
+            <div>Open Source: <a href="https://github.com/rudininh/simulasiukom" target="_blank" rel="noopener">github.com/rudininh/simulasiukom</a></div>
         </footer>
     </div>
 </main>
