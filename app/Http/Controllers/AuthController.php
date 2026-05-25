@@ -63,6 +63,9 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', Password::min(6)],
             'phone' => ['nullable', 'string', 'max:30'],
             'institution' => ['nullable', 'string', 'max:255'],
+            'position_name' => ['nullable', 'string', 'max:255'],
+            'work_unit' => ['nullable', 'string', 'max:255'],
+            'employee_number' => ['nullable', 'string', 'max:100'],
         ]);
 
         $data['role'] = 'peserta';

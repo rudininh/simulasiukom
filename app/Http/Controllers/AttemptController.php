@@ -81,6 +81,14 @@ class AttemptController extends Controller
         return view('attempts.result', compact('attempt'));
     }
 
+    public function print(ExamAttempt $attempt)
+    {
+        $this->authorizeAttempt($attempt);
+        $attempt->load('exam', 'user');
+
+        return view('attempts.print', compact('attempt'));
+    }
+
     public function history()
     {
         $attempts = ExamAttempt::with('exam')->where('user_id', auth()->id())->whereIn('status', ['finished', 'expired'])->latest()->get();
@@ -112,24 +120,40 @@ class AttemptController extends Controller
     {
         DB::transaction(function () use ($attempt, $status) {
             $attempt->load('answers.question.category', 'exam');
-            $scores = ['TWK' => 0, 'TIU' => 0, 'TKP' => 0];
+            $scores = [
+                'REGULASI_ASN' => 0,
+                'MANAJEMEN_ASN' => 0,
+                'KEPEMIMPINAN' => 0,
+                'PELAYANAN_PUBLIK' => 0,
+                'STUDI_KASUS' => 0,
+            ];
+            $correct = 0;
             foreach ($attempt->answers as $answer) {
                 $code = strtoupper($answer->question->category->code);
                 if (isset($scores[$code])) {
                     $scores[$code] += $answer->score_obtained;
                 }
+                if ($answer->is_correct) {
+                    $correct++;
+                }
             }
 
             $total = array_sum($scores);
             $finishedAt = now();
+            $answered = $attempt->answers->whereNotNull('selected_answer')->count();
             $attempt->update([
                 'finished_at' => $attempt->finished_at ?: $finishedAt,
                 'duration_seconds' => $attempt->started_at->diffInSeconds($attempt->finished_at ?: $finishedAt),
-                'score_twk' => $scores['TWK'],
-                'score_tiu' => $scores['TIU'],
-                'score_tkp' => $scores['TKP'],
+                'score_regulasi_asn' => $scores['REGULASI_ASN'],
+                'score_manajemen_asn' => $scores['MANAJEMEN_ASN'],
+                'score_kepemimpinan' => $scores['KEPEMIMPINAN'],
+                'score_pelayanan_publik' => $scores['PELAYANAN_PUBLIK'],
+                'score_studi_kasus' => $scores['STUDI_KASUS'],
                 'score_total' => $total,
-                'is_passed' => $total >= $attempt->exam->passing_grade,
+                'total_answered' => $answered,
+                'total_correct' => $correct,
+                'total_wrong' => max(0, $answered - $correct),
+                'competency_status' => $total >= $attempt->exam->passing_grade ? 'kompeten' : 'belum_kompeten',
                 'status' => $status,
             ]);
         });

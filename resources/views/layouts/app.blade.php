@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'SIMULASI CAT BKN v2.0' }}</title>
+    <title>{{ $title ?? 'SIMULASI CAT UJI KOMPETENSI MANAJEMEN ASN' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('assets/cat.css') }}" rel="stylesheet">
@@ -16,8 +16,8 @@
         <div class="d-flex align-items-center gap-3">
             <div class="brand-logo">CAT</div>
             <div>
-                <div class="brand-title">SIMULASI CAT BKN v2.0</div>
-                <div class="brand-subtitle">Pusat Pengembangan Sistem Seleksi</div>
+                <div class="brand-title">SIMULASI CAT MANAJEMEN ASN</div>
+                <div class="brand-subtitle">Uji Kompetensi Jabatan Manajemen ASN</div>
             </div>
         </div>
         @auth

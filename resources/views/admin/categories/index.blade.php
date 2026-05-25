@@ -1,10 +1,10 @@
 @extends('layouts.admin')
 @section('admin-content')
-<h1 class="page-title mb-4">CRUD Kategori Soal</h1>
+<h1 class="page-title mb-4">Kategori Ujian</h1>
 <div class="cat-card p-3 mb-4"><form method="post" action="{{ route('admin.categories.store') }}" class="row g-2">@csrf
     <div class="col-md-4"><select class="form-select" name="exam_id" required>@foreach($exams as $exam)<option value="{{ $exam->id }}">{{ $exam->title }}</option>@endforeach</select></div>
     <div class="col-md-3"><input class="form-control" name="name" placeholder="Nama kategori" required></div>
-    <div class="col-md-2"><input class="form-control" name="code" placeholder="TWK" required></div>
+    <div class="col-md-2"><input class="form-control" name="code" placeholder="REGULASI_ASN" required></div>
     <div class="col-md-2"><input class="form-control" name="question_count" type="number" placeholder="Jumlah" required></div>
     <div class="col-md-1"><button class="btn btn-navy">Tambah</button></div>
 </form></div>

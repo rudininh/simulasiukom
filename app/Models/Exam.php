@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Exam extends Model
 {
-    protected $fillable = ['title', 'description', 'duration_minutes', 'total_questions', 'passing_grade', 'available_from', 'available_until', 'is_active'];
+    protected $fillable = ['title', 'description', 'exam_type', 'duration_minutes', 'total_questions', 'passing_grade', 'available_from', 'available_until', 'regulation_basis', 'is_active'];
 
     protected $casts = [
         'available_from' => 'date',

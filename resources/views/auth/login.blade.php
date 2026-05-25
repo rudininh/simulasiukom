@@ -3,7 +3,7 @@
 <div class="login-card shadow-lg">
     <div class="text-center mb-4">
         <div class="brand-logo mx-auto mb-3" style="width:96px;height:96px;">CAT</div>
-        <h1 class="h4 fw-bold text-primary-emphasis">SIMULASI CAT BKN</h1>
+        <h1 class="h4 fw-bold text-primary-emphasis">SIMULASI CAT UJI KOMPETENSI MANAJEMEN ASN</h1>
         <p class="text-muted small">Silakan masukkan username dan password Anda</p>
     </div>
     @if ($errors->any()) <div class="alert alert-danger py-2">{{ $errors->first() }}</div> @endif
@@ -29,7 +29,7 @@
         <button class="btn btn-navy btn-lg w-100 mb-4"><i class="fa-solid fa-right-to-bracket me-2"></i>MASUK</button>
         <div class="divider mb-4">atau</div>
         <a href="{{ route('register') }}" class="btn btn-success btn-lg w-100"><i class="fa-solid fa-user-plus me-2"></i>DAFTAR SIMULASI</a>
-        <p class="text-center small text-muted mt-3 mb-0">Belum punya akun? Daftar sekarang untuk mengikuti Simulasi CAT BKN</p>
+        <p class="text-center small text-muted mt-3 mb-0">Belum punya akun? Daftar sekarang untuk mengikuti Simulasi CAT Manajemen ASN</p>
     </form>
 </div>
 @endsection

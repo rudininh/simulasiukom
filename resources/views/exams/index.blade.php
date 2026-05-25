@@ -1,8 +1,8 @@
 @extends('layouts.app')
 @section('content')
 <div class="mb-5">
-    <h1 class="page-title"><i class="fa-solid fa-laptop me-3"></i>Daftar Simulasi</h1>
-    <p class="page-subtitle">Silakan pilih menu Simulasi Ujian yang tersedia.</p>
+    <h1 class="page-title"><i class="fa-solid fa-laptop me-3"></i>Daftar Simulasi Uji Kompetensi</h1>
+    <p class="page-subtitle">Silakan pilih simulasi uji kompetensi jabatan Manajemen ASN yang tersedia.</p>
 </div>
 <div class="row g-4">
     @foreach ($exams as $exam)
@@ -16,6 +16,7 @@
                     <div><i class="fa-solid fa-calendar text-info me-3"></i> Tanggal Tersedia: {{ optional($exam->available_from)->format('d/m/Y') }} - {{ optional($exam->available_until)->format('d/m/Y') }}</div>
                     <div><i class="fa-solid fa-circle-question text-success me-3"></i> Total Soal: {{ $exam->total_questions }}</div>
                     <div><i class="fa-solid fa-trophy text-warning me-3"></i> Passing Grade: {{ number_format($exam->passing_grade, 2) }}</div>
+                    <div><i class="fa-solid fa-scale-balanced text-primary me-3"></i> Dasar Regulasi: {{ $exam->regulation_basis }}</div>
                 </div>
                 <a class="btn btn-navy px-4 py-3" href="{{ route('exams.show', $exam) }}"><i class="fa-solid fa-circle-info me-2"></i>Lihat Detail & Mulai Ujian</a>
             </div>

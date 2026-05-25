@@ -12,11 +12,13 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
+            $table->string('exam_type')->nullable();
             $table->unsignedInteger('duration_minutes');
             $table->unsignedInteger('total_questions');
             $table->decimal('passing_grade', 8, 2)->default(0);
             $table->date('available_from')->nullable();
             $table->date('available_until')->nullable();
+            $table->string('regulation_basis')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
@@ -25,14 +27,50 @@ return new class extends Migration
             $table->id();
             $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
             $table->string('name');
-            $table->string('code', 10);
+            $table->string('code', 50);
             $table->unsignedInteger('question_count')->default(0);
             $table->decimal('passing_score', 8, 2)->nullable();
+            $table->decimal('weight', 8, 2)->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('regulations', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->string('regulation_number')->nullable();
+            $table->unsignedInteger('year')->nullable();
+            $table->text('description')->nullable();
+            $table->string('file_path')->nullable();
+            $table->longText('extracted_text')->nullable();
+            $table->enum('status', ['active', 'inactive'])->default('active');
+            $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 
         Schema::create('questions', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('exam_category_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('regulation_id')->nullable()->constrained()->nullOnDelete();
+            $table->text('question_text');
+            $table->text('option_a');
+            $table->text('option_b');
+            $table->text('option_c');
+            $table->text('option_d');
+            $table->text('option_e');
+            $table->char('correct_answer', 1);
+            $table->text('explanation')->nullable();
+            $table->string('source_reference')->nullable();
+            $table->unsignedInteger('score')->default(1);
+            $table->enum('difficulty', ['easy', 'medium', 'hard', 'case'])->default('medium');
+            $table->unsignedInteger('order_number')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        Schema::create('generated_questions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('regulation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('exam_id')->constrained()->cascadeOnDelete();
             $table->foreignId('exam_category_id')->constrained()->cascadeOnDelete();
             $table->text('question_text');
@@ -42,9 +80,12 @@ return new class extends Migration
             $table->text('option_d');
             $table->text('option_e');
             $table->char('correct_answer', 1);
-            $table->unsignedInteger('score')->default(5);
-            $table->unsignedInteger('order_number')->default(1);
-            $table->boolean('is_active')->default(true);
+            $table->text('explanation')->nullable();
+            $table->string('source_reference')->nullable();
+            $table->string('difficulty')->default('medium');
+            $table->string('question_type')->default('Pemahaman pasal');
+            $table->enum('status', ['draft', 'approved', 'rejected'])->default('draft');
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 
@@ -56,11 +97,16 @@ return new class extends Migration
             $table->timestamp('finished_at')->nullable();
             $table->unsignedInteger('duration_seconds')->nullable();
             $table->unsignedInteger('score_total')->default(0);
-            $table->unsignedInteger('score_twk')->default(0);
-            $table->unsignedInteger('score_tiu')->default(0);
-            $table->unsignedInteger('score_tkp')->default(0);
+            $table->unsignedInteger('score_regulasi_asn')->default(0);
+            $table->unsignedInteger('score_manajemen_asn')->default(0);
+            $table->unsignedInteger('score_kepemimpinan')->default(0);
+            $table->unsignedInteger('score_pelayanan_publik')->default(0);
+            $table->unsignedInteger('score_studi_kasus')->default(0);
+            $table->unsignedInteger('total_answered')->default(0);
+            $table->unsignedInteger('total_correct')->default(0);
+            $table->unsignedInteger('total_wrong')->default(0);
             $table->enum('status', ['ongoing', 'finished', 'expired'])->default('ongoing');
-            $table->boolean('is_passed')->default(false);
+            $table->enum('competency_status', ['kompeten', 'belum_kompeten'])->nullable();
             $table->timestamps();
         });
 
@@ -81,7 +127,9 @@ return new class extends Migration
     {
         Schema::dropIfExists('exam_answers');
         Schema::dropIfExists('exam_attempts');
+        Schema::dropIfExists('generated_questions');
         Schema::dropIfExists('questions');
+        Schema::dropIfExists('regulations');
         Schema::dropIfExists('exam_categories');
         Schema::dropIfExists('exams');
     }

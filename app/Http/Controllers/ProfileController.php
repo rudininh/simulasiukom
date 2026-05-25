@@ -23,6 +23,9 @@ class ProfileController extends Controller
             'username' => ['required', 'alpha_dash', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:30'],
             'institution' => ['nullable', 'string', 'max:255'],
+            'position_name' => ['nullable', 'string', 'max:255'],
+            'work_unit' => ['nullable', 'string', 'max:255'],
+            'employee_number' => ['nullable', 'string', 'max:100'],
             'password' => ['nullable', 'confirmed', Password::min(6)],
         ]);
 

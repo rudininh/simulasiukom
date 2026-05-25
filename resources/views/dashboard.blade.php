@@ -2,15 +2,16 @@
 @section('content')
 <div class="mb-5">
     <h1 class="page-title"><i class="fa-solid fa-gauge-high me-3"></i>Dashboard</h1>
-    <p class="page-subtitle">Selamat datang di Aplikasi Simulasi CAT BKN. Silakan pilih menu yang tersedia.</p>
+    <p class="page-subtitle">Selamat datang di Aplikasi Simulasi CAT Uji Kompetensi Manajemen ASN. Silakan pilih menu yang tersedia.</p>
 </div>
 <div class="row g-4">
     @php
         $cards = [
-            ['Daftar Simulasi','Lihat daftar simulasi yang dapat Anda ikuti','Lihat Ujian','fa-clipboard-list',route('exams.index')],
-            ['Riwayat Ujian','Lihat hasil ujian yang telah Anda selesaikan','Lihat Riwayat','fa-clock-rotate-left',route('history')],
-            ['Profil','Kelola informasi profil Anda','Edit Profil','fa-user-pen',route('profile.edit')],
-            ['Bantuan','Panduan dan FAQ sistem ujian','Lihat Bantuan','fa-circle-question','#'],
+            ['Daftar Simulasi','Lihat daftar simulasi uji kompetensi yang dapat Anda ikuti','Lihat Simulasi','fa-clipboard-list',route('exams.index')],
+            ['Riwayat Ujian','Lihat hasil simulasi uji kompetensi yang telah Anda selesaikan','Lihat Riwayat','fa-clock-rotate-left',route('history')],
+            ['Profil Peserta','Kelola informasi profil peserta uji kompetensi','Edit Profil','fa-user-pen',route('profile.edit')],
+            ['Bank Regulasi','Lihat dasar hukum dan regulasi yang menjadi sumber materi soal','Lihat Regulasi','fa-scale-balanced',route('regulations.public')],
+            ['Bantuan','Panduan penggunaan sistem simulasi uji kompetensi','Lihat Bantuan','fa-circle-question','#'],
         ];
     @endphp
     @foreach ($cards as $card)

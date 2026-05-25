@@ -7,12 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class ExamAttempt extends Model
 {
-    protected $fillable = ['user_id', 'exam_id', 'started_at', 'finished_at', 'duration_seconds', 'score_total', 'score_twk', 'score_tiu', 'score_tkp', 'status', 'is_passed'];
+    protected $fillable = ['user_id', 'exam_id', 'started_at', 'finished_at', 'duration_seconds', 'score_total', 'score_regulasi_asn', 'score_manajemen_asn', 'score_kepemimpinan', 'score_pelayanan_publik', 'score_studi_kasus', 'total_answered', 'total_correct', 'total_wrong', 'status', 'competency_status'];
 
     protected $casts = [
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
-        'is_passed' => 'boolean',
     ];
 
     public function user()

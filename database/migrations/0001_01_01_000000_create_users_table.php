@@ -21,6 +21,9 @@ return new class extends Migration
             $table->enum('role', ['admin', 'peserta'])->default('peserta');
             $table->string('phone')->nullable();
             $table->string('institution')->nullable();
+            $table->string('position_name')->nullable();
+            $table->string('work_unit')->nullable();
+            $table->string('employee_number')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

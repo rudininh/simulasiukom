@@ -9,6 +9,9 @@
         <div class="col-md-6"><label class="form-label">Username</label><input class="form-control" name="username" value="{{ old('username', auth()->user()->username) }}" required></div>
         <div class="col-md-6"><label class="form-label">Nomor HP</label><input class="form-control" name="phone" value="{{ old('phone', auth()->user()->phone) }}"></div>
         <div class="col-md-6"><label class="form-label">Instansi</label><input class="form-control" name="institution" value="{{ old('institution', auth()->user()->institution) }}"></div>
+        <div class="col-md-6"><label class="form-label">Nama Jabatan</label><input class="form-control" name="position_name" value="{{ old('position_name', auth()->user()->position_name) }}"></div>
+        <div class="col-md-6"><label class="form-label">Unit Kerja</label><input class="form-control" name="work_unit" value="{{ old('work_unit', auth()->user()->work_unit) }}"></div>
+        <div class="col-md-6"><label class="form-label">NIP/Nomor Pegawai</label><input class="form-control" name="employee_number" value="{{ old('employee_number', auth()->user()->employee_number) }}"></div>
         <div class="col-md-6"><label class="form-label">Password Baru Opsional</label><input class="form-control" type="password" name="password"></div>
         <div class="col-md-6"><label class="form-label">Konfirmasi Password</label><input class="form-control" type="password" name="password_confirmation"></div>
         <div class="col-12"><button class="btn btn-navy px-4">Simpan Profil</button></div>
