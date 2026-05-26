@@ -195,7 +195,7 @@ class AsnSimulationPreparationService
 
     private function createQuestion(Exam $exam, ExamCategory $category, string $examType, int $order, int $index): void
     {
-        $regulation = $this->regulationFor($category->code);
+        $regulation = $this->regulationFor($category->code, $index);
         $topic = $this->topics($category->code)[$index % count($this->topics($category->code))];
         $suffix = "{$examType} - {$category->code} - {$index}";
 
@@ -279,24 +279,36 @@ class AsnSimulationPreparationService
         ][$code] ?? ['Manajemen ASN'];
     }
 
-    private function regulationFor(string $code): ?Regulation
+    private function regulationFor(string $code, int $index): ?Regulation
     {
-        $map = [
-            'REGULASI_ASN' => 'UU Nomor 20 Tahun 2023',
-            'MANAJEMEN_ASN' => 'PP Nomor 11 Tahun 2017',
-            'KINERJA_KOMPETENSI_ASN' => 'PermenPANRB Nomor 6 Tahun 2022',
-            'KEPEMIMPINAN_MANAJERIAL' => 'PermenPANRB Nomor 38 Tahun 2017',
-            'PELAYANAN_PUBLIK_ETIKA' => 'UU Nomor 25 Tahun 2009',
-            'DISIPLIN_ETIKA_NETRALITAS' => 'PP Nomor 94 Tahun 2021',
-            'PERKAWINAN_PERCERAIAN_ASN' => 'PP Nomor 10 Tahun 1983',
-            'PENSIUN_PEMBERHENTIAN_PNS' => 'UU Nomor 11 Tahun 1969',
-            'PENGADAAN_ASN' => 'PermenPANRB Nomor 6 Tahun 2024',
-            'CUTI_ASN' => 'Peraturan BKN Nomor 24 Tahun 2017',
-            'PANGKAT_PROMOSI_MUTASI_KARIER' => 'Peraturan BKN Nomor 2 Tahun 2025',
-            'ANGKA_KREDIT_JF' => 'Peraturan BKN Nomor 3 Tahun 2023',
+        $pools = [
+            'REGULASI_ASN' => ['UU Nomor 20 Tahun 2023'],
+            'MANAJEMEN_ASN' => ['PP Nomor 11 Tahun 2017', 'PP Nomor 17 Tahun 2020'],
+            'KINERJA_KOMPETENSI_ASN' => [
+                'PermenPANRB Nomor 6 Tahun 2022',
+                'PP Nomor 30 Tahun 2019',
+                'PermenPANRB Nomor 38 Tahun 2017',
+                'Peraturan LAN Nomor 10 Tahun 2018',
+                'Peraturan LAN Nomor 15 Tahun 2020',
+            ],
+            'KEPEMIMPINAN_MANAJERIAL' => ['PermenPANRB Nomor 38 Tahun 2017', 'PP Nomor 11 Tahun 2017'],
+            'PELAYANAN_PUBLIK_ETIKA' => ['UU Nomor 25 Tahun 2009', 'UU Nomor 30 Tahun 2014', 'UU Nomor 14 Tahun 2008'],
+            'DISIPLIN_ETIKA_NETRALITAS' => ['PP Nomor 94 Tahun 2021', 'Peraturan BKN Nomor 6 Tahun 2022', 'PP Nomor 42 Tahun 2004', 'UU Nomor 28 Tahun 1999'],
+            'PERKAWINAN_PERCERAIAN_ASN' => ['PP Nomor 10 Tahun 1983', 'PP Nomor 45 Tahun 1990', 'SE BAKN/BKN Nomor 48/SE/1990'],
+            'PENSIUN_PEMBERHENTIAN_PNS' => ['UU Nomor 11 Tahun 1969', 'Peraturan BKN Nomor 2 Tahun 2018', 'Peraturan BKN Nomor 3 Tahun 2020'],
+            'PENGADAAN_ASN' => ['PermenPANRB Nomor 6 Tahun 2024', 'Peraturan BKN Nomor 14 Tahun 2018', 'Peraturan BKN Nomor 1 Tahun 2019', 'Peraturan BKN Nomor 18 Tahun 2020', 'Peraturan BKN Nomor 5 Tahun 2024', 'Peraturan BKN Nomor 9 Tahun 2021'],
+            'CUTI_ASN' => ['Peraturan BKN Nomor 24 Tahun 2017', 'Peraturan BKN Nomor 7 Tahun 2021', 'Peraturan BKN Nomor 7 Tahun 2022'],
+            'PANGKAT_PROMOSI_MUTASI_KARIER' => ['Peraturan BKN Nomor 2 Tahun 2025', 'Peraturan BKN Nomor 4 Tahun 2025', 'Peraturan BKN Nomor 5 Tahun 2019', 'PermenPANRB Nomor 3 Tahun 2020', 'PermenPANRB Nomor 20 Tahun 2025', 'PermenPANRB Nomor 17 Tahun 2021'],
+            'ANGKA_KREDIT_JF' => ['PermenPANRB Nomor 1 Tahun 2023', 'Peraturan BKN Nomor 3 Tahun 2023', 'PermenPANRB Nomor 17 Tahun 2021'],
         ];
 
-        return Regulation::where('regulation_number', $map[$code] ?? null)->first() ?: Regulation::first();
+        $numbers = $pools[$code] ?? [];
+        if (empty($numbers)) {
+            return Regulation::first();
+        }
+
+        $number = $numbers[($index - 1) % count($numbers)];
+        return Regulation::where('regulation_number', $number)->first() ?: Regulation::first();
     }
 
     private function regulationSeedText(string $category, string $number, string $note): string
