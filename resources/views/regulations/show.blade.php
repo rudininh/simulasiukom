@@ -15,6 +15,12 @@
             <p><strong>Status:</strong> {{ $regulation->status }}</p>
             <p>{{ $regulation->description }}</p>
             <p class="text-muted">{{ $regulation->usage_notes }}</p>
+            @if($regulation->official_url)
+                <a class="btn btn-outline-primary w-100 mb-2" target="_blank" href="{{ $regulation->official_url }}">Buka Link Resmi</a>
+            @endif
+            @if($regulation->pdf_url)
+                <a class="btn btn-outline-info w-100 mb-2" target="_blank" href="{{ $regulation->pdf_url }}">Buka URL PDF</a>
+            @endif
             @if($regulation->keywords)
                 <div class="mb-3">@foreach($regulation->keywords as $keyword)<span class="badge bg-primary me-1">{{ $keyword }}</span>@endforeach</div>
             @endif

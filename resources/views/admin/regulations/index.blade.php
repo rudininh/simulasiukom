@@ -6,6 +6,10 @@
         <button class="btn btn-primary">Download PDF Massal</button>
     </form>
 </div>
+<div class="alert alert-info cat-card border-0 mb-4">
+    Bisa simpan regulasi dari <strong>link resmi</strong>, <strong>link PDF langsung</strong>, atau <strong>upload file PDF/DOCX/TXT</strong>.
+    Kalau Anda isi <code>URL PDF resmi</code>, aktifkan opsi <strong>unduh otomatis</strong> supaya file langsung masuk ke sistem.
+</div>
 <div class="cat-card p-3 mb-4">
     <form method="post" action="{{ route('admin.regulations.store') }}" enctype="multipart/form-data" class="row g-2">@csrf
         <div class="col-md-5"><input class="form-control" name="title" placeholder="Judul regulasi" required></div>
@@ -23,7 +27,14 @@
             <input class="form-check-input" type="checkbox" name="can_download_by_participant" value="1" id="can-download">
             <label class="form-check-label" for="can-download">Peserta boleh download file regulasi</label>
         </div>
-        <div class="col-12"><button class="btn btn-navy">Upload Regulasi</button></div>
+        <div class="col-md-6 form-check d-flex align-items-center gap-2 ps-4">
+            <input class="form-check-input" type="checkbox" name="auto_download_pdf" value="1" id="auto-download-pdf" checked>
+            <label class="form-check-label" for="auto-download-pdf">Unduh PDF otomatis dari URL PDF</label>
+        </div>
+        <div class="col-12 d-flex gap-2 flex-wrap">
+            <button class="btn btn-navy" name="action" value="save">Simpan Regulasi</button>
+            <button class="btn btn-primary" name="action" value="save_download">Simpan & Unduh PDF URL</button>
+        </div>
     </form>
     <datalist id="regulation-categories">
         @foreach(\App\Support\AsnCatalog::regulationCategories() as $category)
