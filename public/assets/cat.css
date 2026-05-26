@@ -137,6 +137,34 @@ body {
 .admin-sidebar a { color: #dbe8ff; text-decoration: none; display: block; padding: 10px 14px; border-radius: 8px; }
 .admin-sidebar a:hover { background: rgba(255,255,255,.12); color: #fff; }
 
+.pagination {
+    align-items: center;
+    gap: 4px;
+    margin: 14px 0 0;
+}
+.pagination .page-link {
+    align-items: center;
+    display: inline-flex;
+    font-size: 13px;
+    height: 32px;
+    justify-content: center;
+    line-height: 1;
+    min-width: 32px;
+    padding: 6px 9px;
+}
+.pagination .page-link svg {
+    display: inline-block;
+    flex: 0 0 auto;
+    height: 14px;
+    max-height: 14px;
+    max-width: 14px;
+    width: 14px;
+}
+.pagination .page-item:first-child .page-link,
+.pagination .page-item:last-child .page-link {
+    min-width: 32px;
+}
+
 @media (max-width: 992px) {
     .cat-header .cat-container, .exam-header .d-flex { gap: 16px; flex-wrap: wrap; }
     .exam-sidebar { width: 100%; }
