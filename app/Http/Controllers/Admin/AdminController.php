@@ -12,6 +12,7 @@ use App\Models\Regulation;
 use App\Models\User;
 use App\Services\QuestionGeneratorService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -513,8 +514,26 @@ class AdminController extends Controller
 
     public function syncExamCategories()
     {
-        \Illuminate\Support\Facades\Artisan::call('exam:sync-categories');
-        return back()->with('success', trim(\Illuminate\Support\Facades\Artisan::output()) ?: 'Kategori course berhasil disinkronkan.');
+        Artisan::call('exam:sync-categories');
+        return back()->with('success', trim(Artisan::output()) ?: 'Kategori course berhasil disinkronkan.');
+    }
+
+    public function resetManajemenAsn()
+    {
+        Artisan::call('exam:reset-manajemen-asn');
+        return back()->with('success', trim(Artisan::output()) ?: 'Reset simulasi Manajemen ASN selesai.');
+    }
+
+    public function prepareFullSimulation()
+    {
+        Artisan::call('asn:prepare-full-simulation');
+        return back()->with('success', trim(Artisan::output()) ?: 'Persiapan simulasi penuh selesai.');
+    }
+
+    public function validateReadiness()
+    {
+        Artisan::call('asn:validate-simulation-readiness');
+        return back()->with('success', trim(Artisan::output()));
     }
 
     private function cleanExtractedText(?string $text): ?string

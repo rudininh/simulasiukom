@@ -24,6 +24,11 @@
                 <div><strong>Kategori:</strong> {{ $regulation->category }}</div>
                 <div><strong>Prioritas:</strong> {{ $regulation->priority }}</div>
                 <div><strong>Status:</strong> {{ $regulation->status }}</div>
+                <div><strong>Status PDF:</strong> {{ $regulation->download_status }}</div>
+                <div><strong>Boleh Download Peserta:</strong> {{ $regulation->can_download_by_participant ? 'Ya' : 'Tidak' }}</div>
+                @if($regulation->official_url)<div><strong>URL Resmi:</strong> <a href="{{ $regulation->official_url }}" target="_blank">{{ $regulation->official_url }}</a></div>@endif
+                @if($regulation->pdf_url)<div><strong>URL PDF:</strong> <a href="{{ $regulation->pdf_url }}" target="_blank">{{ $regulation->pdf_url }}</a></div>@endif
+                @if($regulation->download_error)<div><strong>Error Download:</strong> {{ $regulation->download_error }}</div>@endif
                 <div><strong>Status Ekstraksi:</strong> {{ $regulation->extraction_status }}</div>
                 <div><strong>Metode:</strong> {{ $regulation->extraction_method }}</div>
                 <div><strong>Deskripsi:</strong> {{ $regulation->description }}</div>
@@ -31,8 +36,9 @@
             </div>
         </div>
         <div class="cat-card p-3 mt-3 d-grid gap-2">
-            <a class="btn btn-primary" href="{{ route('admin.regulations.preview',$regulation) }}">Lihat PDF/File</a>
+            @if($regulation->file_path)<a class="btn btn-primary" href="{{ route('admin.regulations.preview',$regulation) }}">Lihat PDF/File</a>@endif
             @if($regulation->file_path)<a class="btn btn-secondary" href="{{ route('admin.regulations.download',$regulation) }}">Download PDF/File</a>@endif
+            @if($regulation->pdf_url)<form method="post" action="{{ route('admin.regulations.download-pdf',$regulation) }}">@csrf<button class="btn btn-info w-100">Download PDF dari URL</button></form>@endif
             <form method="post" action="{{ route('admin.regulations.extract-text',$regulation) }}">@csrf<button class="btn btn-navy w-100">Ekstrak Teks</button></form>
             <form method="post" action="{{ route('admin.regulations.ocr',$regulation) }}">@csrf<button class="btn btn-warning w-100">OCR PDF</button></form>
             <a class="btn btn-success" href="{{ route('admin.regulations.generate-questions',$regulation) }}">Generate Soal dari PDF</a>

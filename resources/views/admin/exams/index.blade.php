@@ -2,9 +2,14 @@
 @section('admin-content')
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
     <h1 class="page-title mb-0">CRUD Ujian</h1>
-    <form method="post" action="{{ route('admin.exams.sync-categories') }}">@csrf
-        <button class="btn btn-warning"><i class="fa-solid fa-rotate me-1"></i> Sinkron Kategori 100 Soal</button>
-    </form>
+    <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{{ route('admin.exams.prepare-full-simulation') }}">@csrf<button class="btn btn-success">Siapkan 4 Simulasi ASN</button></form>
+        <a class="btn btn-outline-primary" href="{{ route('admin.exams.validate-readiness') }}">Validasi Readiness</a>
+        <form method="post" action="{{ route('admin.exams.reset-manajemen-asn') }}">@csrf<button class="btn btn-outline-danger">Reset Simulasi Lama</button></form>
+        <form method="post" action="{{ route('admin.exams.sync-categories') }}">@csrf
+            <button class="btn btn-warning"><i class="fa-solid fa-rotate me-1"></i> Sinkron Kategori 100 Soal</button>
+        </form>
+    </div>
 </div>
 <div class="cat-card p-3 mb-4">
 <form method="post" action="{{ route('admin.exams.store') }}" class="row g-2">@csrf

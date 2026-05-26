@@ -1,6 +1,11 @@
 @extends('layouts.admin')
 @section('admin-content')
-<h1 class="page-title mb-4">Bank Regulasi</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="page-title mb-0">Bank Regulasi</h1>
+    <form method="post" action="{{ route('admin.regulations.download-all-pdfs') }}">@csrf
+        <button class="btn btn-primary">Download PDF Massal</button>
+    </form>
+</div>
 <div class="cat-card p-3 mb-4">
     <form method="post" action="{{ route('admin.regulations.store') }}" enctype="multipart/form-data" class="row g-2">@csrf
         <div class="col-md-5"><input class="form-control" name="title" placeholder="Judul regulasi" required></div>
@@ -9,9 +14,15 @@
         <div class="col-md-2"><select class="form-select" name="status"><option value="active">Aktif</option><option value="inactive">Nonaktif</option></select></div>
         <div class="col-md-4"><input class="form-control" name="category" list="regulation-categories" placeholder="Kategori regulasi"></div>
         <div class="col-md-2"><input class="form-control" name="priority" placeholder="Prioritas"></div>
+        <div class="col-md-3"><input class="form-control" name="official_url" type="url" placeholder="URL resmi"></div>
+        <div class="col-md-3"><input class="form-control" name="pdf_url" type="url" placeholder="URL PDF resmi"></div>
         <div class="col-md-6"><input class="form-control" type="file" name="file" accept=".pdf,.docx,.txt"></div>
         <div class="col-md-6"><textarea class="form-control" name="description" placeholder="Deskripsi"></textarea></div>
         <div class="col-md-6"><textarea class="form-control" name="usage_notes" placeholder="Catatan penggunaan untuk soal"></textarea></div>
+        <div class="col-md-6 form-check d-flex align-items-center gap-2 ps-4">
+            <input class="form-check-input" type="checkbox" name="can_download_by_participant" value="1" id="can-download">
+            <label class="form-check-label" for="can-download">Peserta boleh download file regulasi</label>
+        </div>
         <div class="col-12"><button class="btn btn-navy">Upload Regulasi</button></div>
     </form>
     <datalist id="regulation-categories">
@@ -32,7 +43,9 @@
                     <p class="small text-muted mb-0">{{ $regulation->description }}</p>
                 </td>
                 <td>
-                    @if($regulation->file_path)<span class="badge bg-primary">PDF/File tersedia</span>@endif
+                    @if($regulation->file_path)<span class="badge bg-primary">PDF tersedia</span>@else<span class="badge bg-secondary">PDF belum tersedia</span>@endif
+                    @if($regulation->download_status === 'failed')<span class="badge bg-danger">Download gagal</span>@endif
+                    @if($regulation->download_status === 'manual_required')<span class="badge bg-warning text-dark">Upload manual</span>@endif
                     @if($regulation->extracted_text)<span class="badge bg-success">Teks tersedia</span>@endif
                     @if($regulation->extraction_status === 'need_ocr')<span class="badge bg-warning text-dark">Perlu OCR</span>@endif
                     @if($regulation->extraction_status === 'ocr_completed')<span class="badge bg-info text-dark">OCR selesai</span>@endif
@@ -43,6 +56,7 @@
                 <td class="text-nowrap">
                     <a class="btn btn-sm btn-navy" href="{{ route('admin.regulations.show',$regulation) }}">Detail</a>
                     @if($regulation->file_path)<a class="btn btn-sm btn-primary" href="{{ route('admin.regulations.preview',$regulation) }}">Preview</a>@endif
+                    @if($regulation->pdf_url)<form class="d-inline" method="post" action="{{ route('admin.regulations.download-pdf',$regulation) }}">@csrf<button class="btn btn-sm btn-info">Download URL</button></form>@endif
                     <a class="btn btn-sm btn-secondary" href="{{ route('admin.regulations.text',$regulation) }}">Teks</a>
                     <form class="d-inline" method="post" action="{{ route('admin.regulations.destroy',$regulation) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-danger">Hapus</button></form>
                 </td>

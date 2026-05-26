@@ -210,6 +210,49 @@ Command ini menambahkan 12 kategori final ke setiap course aktif dan menyetel to
 
 Admin tetap bisa mengubah jumlah soal per kategori dari menu `Kategori Ujian`.
 
+## Persiapan Penuh Simulasi ASN
+
+Untuk mereset/nonaktifkan course lama, menginput seluruh 45 regulasi rencana, menyiapkan 4 simulasi final, membuat 400 soal aktif, dan menjalankan validasi readiness:
+
+```bash
+php artisan asn:prepare-full-simulation
+```
+
+Command ini aman dijalankan ulang. Course lama yang tidak termasuk konsep final Manajemen ASN dinonaktifkan, user/admin dan Bank Regulasi tidak dihapus, dan backup ringkas disimpan ke `storage/app/asn-backups`.
+
+Validasi kesiapan:
+
+```bash
+php artisan asn:validate-simulation-readiness
+```
+
+Output `READY` berarti 4 course aktif tersedia, masing-masing berisi tepat 100 soal aktif, komposisi kategori sesuai, opsi A-E lengkap, pembahasan tersedia, dan scoring dinamis siap.
+
+Reset course lama saja:
+
+```bash
+php artisan exam:reset-manajemen-asn
+```
+
+## Download PDF Regulasi
+
+Jika admin mengisi `pdf_url` resmi pada regulasi, PDF dapat diunduh dari halaman Bank Regulasi atau command:
+
+```bash
+php artisan regulation:download-pdfs
+```
+
+Sumber resmi yang diprioritaskan saat mengisi URL manual adalah `peraturan.bpk.go.id`, `jdih.bkn.go.id`, `jdih.menpan.go.id`, `jdih.setneg.go.id`, dan JDIH instansi resmi lain. Jika URL belum bisa dipastikan, regulasi tetap tersimpan dengan status `manual_required` dan admin dapat upload PDF manual.
+
+Command massal lain:
+
+```bash
+php artisan regulation:extract-all
+php artisan regulation:ocr-all
+```
+
+Peserta dapat preview regulasi aktif. Peserta hanya dapat download file jika admin mengaktifkan opsi `Peserta boleh download file regulasi`.
+
 ## Regulasi Default Tambahan
 
 Seeder menambahkan regulasi default baru tanpa duplikasi untuk materi:
@@ -224,8 +267,13 @@ Regulasi tersebut tampil di Bank Regulasi dengan kategori, prioritas, catatan pe
 ## Command Regulasi
 
 ```bash
+php artisan asn:prepare-full-simulation
+php artisan asn:validate-simulation-readiness
+php artisan regulation:download-pdfs
 php artisan regulation:extract {regulation_id}
+php artisan regulation:extract-all
 php artisan regulation:ocr {regulation_id}
+php artisan regulation:ocr-all
 php artisan regulation:summarize {regulation_id}
 ```
 

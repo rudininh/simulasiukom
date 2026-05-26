@@ -38,6 +38,7 @@ Route::middleware(['auth', 'role:peserta'])->group(function () {
     Route::get('/regulasi', [RegulationPublicController::class, 'index'])->name('regulations.public');
     Route::get('/regulasi/{regulation}', [RegulationPublicController::class, 'show'])->name('regulations.public.show');
     Route::get('/regulasi/{regulation}/preview', [RegulationPublicController::class, 'preview'])->name('regulations.public.preview');
+    Route::get('/regulasi/{regulation}/download', [RegulationPublicController::class, 'download'])->name('regulations.public.download');
     Route::get('/hasil/{attempt}/cetak', [AttemptController::class, 'print'])->name('results.print');
 });
 
@@ -64,8 +65,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/regulations/{regulation}', [RegulationController::class, 'show'])->name('regulations.show');
     Route::put('/regulations/{regulation}', [RegulationController::class, 'update'])->name('regulations.update');
     Route::delete('/regulations/{regulation}', [RegulationController::class, 'destroy'])->name('regulations.destroy');
+    Route::post('/regulations/download-all-pdfs', [RegulationController::class, 'downloadAllPdfs'])->name('regulations.download-all-pdfs');
     Route::get('/regulations/{regulation}/preview', [RegulationController::class, 'preview'])->name('regulations.preview');
     Route::get('/regulations/{regulation}/download', [RegulationController::class, 'download'])->name('regulations.download');
+    Route::post('/regulations/{regulation}/download-pdf', [RegulationController::class, 'downloadPdf'])->name('regulations.download-pdf');
     Route::get('/regulations/{regulation}/extract', [RegulationController::class, 'text'])->name('regulations.extract');
     Route::post('/regulations/{regulation}/extract', [RegulationController::class, 'extractText'])->name('regulations.extract.run');
     Route::post('/regulations/{regulation}/extract-text', [RegulationController::class, 'extractText'])->name('regulations.extract-text');
@@ -75,6 +78,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/regulations/{regulation}/summarize', [RegulationController::class, 'summarize'])->name('regulations.summarize');
     Route::get('/regulations/{regulation}/generate-questions', [RegulationQuestionGeneratorController::class, 'create'])->name('regulations.generate-questions');
     Route::post('/regulations/{regulation}/generate-questions', [RegulationQuestionGeneratorController::class, 'store'])->name('regulations.generate-questions.store');
+    Route::post('/exams/reset-manajemen-asn', [AdminController::class, 'resetManajemenAsn'])->name('exams.reset-manajemen-asn');
+    Route::post('/exams/prepare-full-simulation', [AdminController::class, 'prepareFullSimulation'])->name('exams.prepare-full-simulation');
+    Route::get('/exams/validate-readiness', [AdminController::class, 'validateReadiness'])->name('exams.validate-readiness');
     Route::get('/question-generator', [AdminController::class, 'questionGenerator'])->name('question-generator.index');
     Route::post('/question-generator/generate', [AdminController::class, 'generateQuestions'])->name('question-generator.generate');
     Route::get('/generated-questions', [AdminController::class, 'generatedQuestions'])->name('generated-questions.index');

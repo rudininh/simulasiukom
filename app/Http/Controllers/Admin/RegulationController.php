@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Regulation;
 use App\Services\RegulationOcrService;
+use App\Services\RegulationPdfDownloaderService;
 use App\Services\RegulationSummaryService;
 use App\Services\RegulationTextExtractorService;
 use Illuminate\Http\Request;
@@ -51,6 +52,9 @@ class RegulationController extends Controller
     public function update(Request $request, Regulation $regulation)
     {
         $data = $this->validated($request);
+        if (!$request->hasFile('file') && $regulation->file_path && empty($data['pdf_url'])) {
+            unset($data['download_status']);
+        }
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $data['file_path'] = $file->store('regulations', 'public');
@@ -80,6 +84,28 @@ class RegulationController extends Controller
     {
         abort_unless($regulation->file_path && Storage::disk('public')->exists($regulation->file_path), 404);
         return Storage::disk('public')->download($regulation->file_path, $regulation->original_filename ?: basename($regulation->file_path));
+    }
+
+    public function downloadPdf(Regulation $regulation, RegulationPdfDownloaderService $downloader)
+    {
+        $ok = $downloader->download($regulation);
+        return back()->with($ok ? 'success' : 'error', $ok ? 'PDF regulasi berhasil diunduh.' : 'Download PDF gagal. Silakan cek pesan error atau upload manual.');
+    }
+
+    public function downloadAllPdfs(RegulationPdfDownloaderService $downloader)
+    {
+        $success = 0;
+        $failed = 0;
+
+        Regulation::whereNotNull('pdf_url')->where('pdf_url', '<>', '')->each(function (Regulation $regulation) use ($downloader, &$success, &$failed) {
+            $downloader->download($regulation) ? $success++ : $failed++;
+        });
+
+        Regulation::where(function ($query) {
+            $query->whereNull('pdf_url')->orWhere('pdf_url', '');
+        })->update(['download_status' => 'manual_required']);
+
+        return back()->with('success', "Download selesai. Berhasil: {$success}, gagal: {$failed}.");
     }
 
     public function extractText(Regulation $regulation, RegulationTextExtractorService $extractor)
@@ -126,7 +152,7 @@ class RegulationController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'regulation_number' => ['nullable', 'string', 'max:255'],
             'year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
@@ -134,10 +160,24 @@ class RegulationController extends Controller
             'priority' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string'],
             'usage_notes' => ['nullable', 'string'],
+            'official_url' => ['nullable', 'url', 'max:255'],
+            'pdf_url' => ['nullable', 'url', 'max:255'],
+            'can_download_by_participant' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,docx,txt', 'max:20480'],
             'status' => ['required', 'in:active,inactive'],
         ], [
             'file.mimes' => 'Format file tidak didukung.',
         ]);
+
+        $data['can_download_by_participant'] = $request->boolean('can_download_by_participant');
+        if ($request->hasFile('file')) {
+            $data['download_status'] = 'downloaded';
+            $data['download_error'] = null;
+            $data['downloaded_at'] = now();
+        } elseif (empty($data['pdf_url'])) {
+            $data['download_status'] = 'manual_required';
+        }
+
+        return $data;
     }
 }

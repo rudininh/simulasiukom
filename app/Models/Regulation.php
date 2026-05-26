@@ -8,13 +8,16 @@ class Regulation extends Model
 {
     protected $fillable = [
         'title', 'regulation_number', 'year', 'category', 'priority', 'description', 'usage_notes',
-        'file_path', 'original_filename', 'mime_type', 'file_size', 'extracted_text', 'extraction_status',
+        'official_url', 'pdf_url', 'download_status', 'download_error', 'downloaded_at',
+        'can_download_by_participant', 'file_path', 'original_filename', 'mime_type', 'file_size', 'extracted_text', 'extraction_status',
         'extraction_method', 'extraction_error', 'extracted_at', 'page_count', 'ocr_language',
         'ocr_confidence', 'summary', 'keywords', 'status', 'uploaded_by',
     ];
 
     protected $casts = [
         'extracted_at' => 'datetime',
+        'downloaded_at' => 'datetime',
+        'can_download_by_participant' => 'boolean',
         'keywords' => 'array',
     ];
 

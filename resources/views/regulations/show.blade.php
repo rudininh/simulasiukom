@@ -20,6 +20,9 @@
             @endif
             @if($regulation->file_path)
                 <a class="btn btn-navy w-100" href="{{ route('regulations.public.preview',$regulation) }}">Baca PDF/File</a>
+                @if($regulation->can_download_by_participant)
+                    <a class="btn btn-secondary w-100 mt-2" href="{{ route('regulations.public.download',$regulation) }}">Download PDF/File</a>
+                @endif
             @endif
         </div>
         @if($regulation->summary)
