@@ -11,6 +11,25 @@
     Kalau Anda isi <code>URL PDF resmi</code>, aktifkan opsi <strong>unduh otomatis</strong> supaya file langsung masuk ke sistem.
 </div>
 <div class="cat-card p-3 mb-4">
+    <form method="get" action="{{ route('admin.regulations.index') }}" class="row g-2 align-items-center">
+        <div class="col-md-10">
+            <input
+                class="form-control"
+                type="search"
+                name="q"
+                value="{{ $search ?? request('q') }}"
+                placeholder="Cari judul, nomor, kategori, URL, prioritas, atau catatan regulasi..."
+            >
+        </div>
+        <div class="col-md-2 d-grid gap-2 d-md-flex">
+            <button class="btn btn-navy flex-fill" type="submit">Cari</button>
+            @if(!empty($search ?? request('q')))
+                <a class="btn btn-secondary flex-fill" href="{{ route('admin.regulations.index') }}">Reset</a>
+            @endif
+        </div>
+    </form>
+</div>
+<div class="cat-card p-3 mb-4">
     <form method="post" action="{{ route('admin.regulations.store') }}" enctype="multipart/form-data" class="row g-2">@csrf
         <div class="col-md-5"><input class="form-control" name="title" placeholder="Judul regulasi" required></div>
         <div class="col-md-3"><input class="form-control" name="regulation_number" placeholder="Nomor regulasi"></div>
@@ -46,7 +65,7 @@
     <table class="table align-middle">
         <thead><tr><th>Regulasi</th><th>Badge</th><th>Teks</th><th>Aksi</th></tr></thead>
         <tbody>
-        @foreach($regulations as $regulation)
+        @forelse($regulations as $regulation)
             <tr>
                 <td>
                     <strong>{{ $regulation->title }}</strong><br>
@@ -72,7 +91,13 @@
                     <form class="d-inline" method="post" action="{{ route('admin.regulations.destroy',$regulation) }}">@csrf @method('DELETE')<button class="btn btn-sm btn-danger">Hapus</button></form>
                 </td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">
+                    Tidak ada regulasi yang cocok dengan pencarian ini.
+                </td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
     {{ $regulations->links() }}

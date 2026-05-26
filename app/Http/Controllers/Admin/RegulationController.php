@@ -13,10 +13,30 @@ use Illuminate\Support\Facades\Storage;
 
 class RegulationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->query('q', ''));
+
+        $regulations = Regulation::with('uploader', 'generatedQuestions')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('regulation_number', 'like', '%'.$search.'%')
+                        ->orWhere('category', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%')
+                        ->orWhere('usage_notes', 'like', '%'.$search.'%')
+                        ->orWhere('official_url', 'like', '%'.$search.'%')
+                        ->orWhere('pdf_url', 'like', '%'.$search.'%')
+                        ->orWhere('priority', 'like', '%'.$search.'%');
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.regulations.index', [
-            'regulations' => Regulation::with('uploader', 'generatedQuestions')->latest()->paginate(15),
+            'regulations' => $regulations,
+            'search' => $search,
         ]);
     }
 
