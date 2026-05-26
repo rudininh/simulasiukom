@@ -11,13 +11,14 @@ class Regulation extends Model
         'official_url', 'pdf_url', 'download_status', 'download_error', 'downloaded_at',
         'can_download_by_participant', 'file_path', 'original_filename', 'mime_type', 'file_size', 'extracted_text', 'extraction_status',
         'extraction_method', 'extraction_error', 'extracted_at', 'page_count', 'ocr_language',
-        'ocr_confidence', 'summary', 'keywords', 'status', 'uploaded_by',
+        'ocr_confidence', 'summary', 'keywords', 'status', 'is_active', 'uploaded_by',
     ];
 
     protected $casts = [
         'extracted_at' => 'datetime',
         'downloaded_at' => 'datetime',
         'can_download_by_participant' => 'boolean',
+        'is_active' => 'boolean',
         'keywords' => 'array',
     ];
 

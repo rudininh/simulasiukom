@@ -113,7 +113,7 @@ class AdminController extends Controller
             'questions' => Question::with('exam', 'category')->orderByDesc('id')->paginate(15),
             'exams' => Exam::with('categories')->orderBy('title')->get(),
             'categories' => ExamCategory::with('exam')->get(),
-            'regulations' => Regulation::where('status', 'active')->orderBy('title')->get(),
+            'regulations' => Regulation::where('is_active', true)->orderBy('title')->get(),
         ]);
     }
 
@@ -197,7 +197,7 @@ class AdminController extends Controller
             'year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'description' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'mimes:pdf,docx,txt', 'max:10240'],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['nullable', 'string', 'max:255'],
         ]);
         if ($request->hasFile('file')) {
             $data['file_path'] = $request->file('file')->store('regulations', 'public');
@@ -217,7 +217,7 @@ class AdminController extends Controller
             'year' => ['nullable', 'integer', 'min:1900', 'max:2100'],
             'description' => ['nullable', 'string'],
             'file' => ['nullable', 'file', 'mimes:pdf,docx,txt', 'max:10240'],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['nullable', 'string', 'max:255'],
         ]);
         if ($request->hasFile('file')) {
             $data['file_path'] = $request->file('file')->store('regulations', 'public');
@@ -247,7 +247,7 @@ class AdminController extends Controller
     public function questionGenerator()
     {
         return view('admin.regulations.generator', [
-            'regulations' => Regulation::where('status', 'active')->latest()->get(),
+            'regulations' => Regulation::where('is_active', true)->latest()->get(),
             'exams' => Exam::with('categories')->orderBy('title')->get(),
             'categories' => ExamCategory::with('exam')->get(),
         ]);

@@ -7,7 +7,7 @@
 <div class="cat-card p-3">
     <h5>{{ $regulation->title }}</h5>
     @if($regulation->isPdf())
-        <iframe src="{{ asset('storage/'.$regulation->file_path) }}" style="width:100%;height:780px;border:1px solid #ddd;border-radius:8px"></iframe>
+        <iframe src="{{ Storage::url($regulation->file_path) }}" style="width:100%;height:800px;border:1px solid #ddd;border-radius:8px"></iframe>
     @else
         <pre style="white-space:pre-wrap">{{ $regulation->extracted_text ?: 'Preview belum tersedia.' }}</pre>
     @endif

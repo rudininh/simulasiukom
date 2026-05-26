@@ -212,7 +212,7 @@ Admin tetap bisa mengubah jumlah soal per kategori dari menu `Kategori Ujian`.
 
 ## Persiapan Penuh Simulasi ASN
 
-Untuk mereset/nonaktifkan course lama, menginput seluruh 45 regulasi rencana, menyiapkan 4 simulasi final, membuat 400 soal aktif, dan menjalankan validasi readiness:
+Untuk mereset/nonaktifkan course lama, menginput seluruh 46 regulasi rencana, menyiapkan 4 simulasi final, membuat 400 soal aktif, dan menjalankan validasi readiness:
 
 ```bash
 php artisan asn:prepare-full-simulation
@@ -232,14 +232,52 @@ Reset course lama saja:
 
 ```bash
 php artisan exam:reset-manajemen-asn
+php artisan exam:sync-categories
+php artisan exam:seed-questions
 ```
 
-## Download PDF Regulasi
-
-Jika admin mengisi `pdf_url` resmi pada regulasi, PDF dapat diunduh dari halaman Bank Regulasi atau command:
+Seeder regulasi saja:
 
 ```bash
+php artisan db:seed --class=RegulationSeeder
+```
+
+## Download PDF Regulasi dari Internet
+
+Admin dapat mengisi `official_url` berupa halaman detail peraturan atau `pdf_url` berupa link download langsung. Untuk `peraturan.bpk.go.id`, jika `pdf_url` kosong sistem akan membuka halaman `official_url`, mencari link yang mengandung `/Download/`, lalu mengunduh PDF tersebut.
+
+```bash
+php artisan regulation:download-pdf {regulation_id}
 php artisan regulation:download-pdfs
+php artisan regulation:download-bpk
+```
+
+Contoh:
+
+```bash
+php artisan regulation:download-pdf 1
+```
+
+Contoh `official_url`:
+
+```text
+https://peraturan.bpk.go.id/Details/269470/uu-no-20-tahun-2023
+```
+
+Contoh `pdf_url`:
+
+```text
+https://peraturan.bpk.go.id/Download/326904/UU%20Nomor%2020%20Tahun%202023.pdf
+```
+
+PDF tersimpan di `storage/app/public/regulations/{tahun}/{slug-title}.pdf`, metadata `pdf_url`, `file_path`, `mime_type`, `file_size`, `download_status`, dan `downloaded_at` diperbarui otomatis. Setelah download berhasil sistem mencoba ekstraksi teks; jika PDF tidak memiliki teks yang cukup, status ekstraksi menjadi `need_ocr`.
+
+Preview PDF tersedia di halaman detail admin dan peserta. Admin bisa download semua file PDF; peserta hanya bisa download jika opsi `Peserta boleh download file regulasi` diaktifkan.
+
+Pastikan storage link sudah tersedia:
+
+```bash
+php artisan storage:link
 ```
 
 Sumber resmi yang diprioritaskan saat mengisi URL manual adalah `peraturan.bpk.go.id`, `jdih.bkn.go.id`, `jdih.menpan.go.id`, `jdih.setneg.go.id`, dan JDIH instansi resmi lain. Jika URL belum bisa dipastikan, regulasi tetap tersimpan dengan status `manual_required` dan admin dapat upload PDF manual.
@@ -253,23 +291,28 @@ php artisan regulation:ocr-all
 
 Peserta dapat preview regulasi aktif. Peserta hanya dapat download file jika admin mengaktifkan opsi `Peserta boleh download file regulasi`.
 
-## Regulasi Default Tambahan
+## Regulasi Default
 
-Seeder menambahkan regulasi default baru tanpa duplikasi untuk materi:
-- Pensiun dan Pemberhentian PNS.
-- Pengadaan PNS dan PPPK.
-- Cuti PNS dan PPPK.
-- Pangkat, Promosi, Mutasi, dan Karier ASN.
-- Angka Kredit dan Kenaikan Jenjang Jabatan Fungsional.
+`RegulationSeeder` menginput daftar regulasi Manajemen ASN/Kepegawaian, termasuk UU ASN, Manajemen PNS/PPPK, Kinerja dan Kompetensi ASN, Jabatan Fungsional dan Angka Kredit, Pangkat/Karier, Disiplin, Pelayanan Publik, Pengadaan, Cuti, Pensiun, Perkawinan/Perceraian ASN, SPBE, kesejahteraan, dan regulasi lokal.
 
-Regulasi tersebut tampil di Bank Regulasi dengan kategori, prioritas, catatan penggunaan soal, ringkasan, dan kata kunci awal. Admin dapat mengganti data seed ini dengan upload PDF resmi, lalu menjalankan ekstraksi/OCR.
+Seeder tidak membuat duplikasi aktif: data lama tidak dihapus, tetapi alias/duplikat lama yang tidak canonical dapat dinonaktifkan agar peserta melihat daftar regulasi yang rapi.
 
 ## Command Regulasi
 
 ```bash
+php artisan db:seed --class=RegulationSeeder
 php artisan asn:prepare-full-simulation
+php artisan asn:prepare-full-simulation --download-pdfs
+php artisan asn:prepare-full-simulation --skip-download
+php artisan asn:prepare-full-simulation --extract
+php artisan asn:prepare-full-simulation --ocr
 php artisan asn:validate-simulation-readiness
+php artisan exam:reset-manajemen-asn
+php artisan exam:sync-categories
+php artisan exam:seed-questions
+php artisan regulation:download-pdf {regulation_id}
 php artisan regulation:download-pdfs
+php artisan regulation:download-bpk
 php artisan regulation:extract {regulation_id}
 php artisan regulation:extract-all
 php artisan regulation:ocr {regulation_id}
@@ -278,6 +321,12 @@ php artisan regulation:summarize {regulation_id}
 ```
 
 `regulation:extract` membaca TXT/DOCX/PDF text-based. Jika PDF tidak memiliki teks yang cukup, status regulasi menjadi `need_ocr`. `regulation:ocr` menjalankan OCR PDF scan menggunakan Tesseract dan Poppler. `regulation:summarize` membuat ringkasan dari hasil ekstraksi/OCR.
+
+Dependency OCR Ubuntu:
+
+```bash
+sudo apt install tesseract-ocr tesseract-ocr-ind poppler-utils
+```
 
 ## Scoring Dinamis per Kategori
 

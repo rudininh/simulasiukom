@@ -76,7 +76,10 @@ class RegulationController extends Controller
 
     public function preview(Regulation $regulation)
     {
-        abort_unless($regulation->file_path && Storage::disk('public')->exists($regulation->file_path), 404);
+        if (!$regulation->file_path || !Storage::disk('public')->exists($regulation->file_path)) {
+            return response('PDF belum tersedia. Silakan download dari internet atau upload manual.', 404);
+        }
+
         return view('admin.regulations.preview', compact('regulation'));
     }
 
@@ -88,24 +91,48 @@ class RegulationController extends Controller
 
     public function downloadPdf(Regulation $regulation, RegulationPdfDownloaderService $downloader)
     {
-        $ok = $downloader->download($regulation);
-        return back()->with($ok ? 'success' : 'error', $ok ? 'PDF regulasi berhasil diunduh.' : 'Download PDF gagal. Silakan cek pesan error atau upload manual.');
+        $result = $downloader->download($regulation);
+        return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
 
     public function downloadAllPdfs(RegulationPdfDownloaderService $downloader)
     {
         $success = 0;
         $failed = 0;
+        $errors = [];
 
-        Regulation::whereNotNull('pdf_url')->where('pdf_url', '<>', '')->each(function (Regulation $regulation) use ($downloader, &$success, &$failed) {
-            $downloader->download($regulation) ? $success++ : $failed++;
+        Regulation::where('download_status', '<>', 'downloaded')
+            ->where(function ($query) {
+                $query->where(function ($subQuery) {
+                    $subQuery->whereNotNull('official_url')->where('official_url', '<>', '');
+                })->orWhere(function ($subQuery) {
+                    $subQuery->whereNotNull('pdf_url')->where('pdf_url', '<>', '');
+                });
+            })
+            ->each(function (Regulation $regulation) use ($downloader, &$success, &$failed, &$errors) {
+            $result = $downloader->download($regulation);
+            if ($result['success']) {
+                $success++;
+            } else {
+                $failed++;
+                $errors[] = $regulation->title.': '.$result['message'];
+            }
         });
 
         Regulation::where(function ($query) {
-            $query->whereNull('pdf_url')->orWhere('pdf_url', '');
+            $query->where(function ($subQuery) {
+                $subQuery->whereNull('pdf_url')->orWhere('pdf_url', '');
+            })->where(function ($subQuery) {
+                $subQuery->whereNull('official_url')->orWhere('official_url', '');
+            });
         })->update(['download_status' => 'manual_required']);
 
-        return back()->with('success', "Download selesai. Berhasil: {$success}, gagal: {$failed}.");
+        $message = "Download selesai. Berhasil: {$success}, gagal: {$failed}.";
+        if ($errors) {
+            $message .= ' Error: '.implode(' | ', array_slice($errors, 0, 5));
+        }
+
+        return back()->with('success', $message);
     }
 
     public function extractText(Regulation $regulation, RegulationTextExtractorService $extractor)
@@ -163,13 +190,16 @@ class RegulationController extends Controller
             'official_url' => ['nullable', 'url', 'max:255'],
             'pdf_url' => ['nullable', 'url', 'max:255'],
             'can_download_by_participant' => ['nullable', 'boolean'],
+            'is_active' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,docx,txt', 'max:20480'],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['nullable', 'string', 'max:255'],
         ], [
             'file.mimes' => 'Format file tidak didukung.',
         ]);
 
         $data['can_download_by_participant'] = $request->boolean('can_download_by_participant');
+        $data['is_active'] = $request->boolean('is_active', true);
+        $data['status'] = $data['status'] ?: 'Berlaku';
         if ($request->hasFile('file')) {
             $data['download_status'] = 'downloaded';
             $data['download_error'] = null;

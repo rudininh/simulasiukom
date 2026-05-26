@@ -127,6 +127,8 @@ class DatabaseSeeder extends Seeder
         if ($administrator->questions()->where('is_active', true)->count() < 100 || !$hasFinalQuestionSet) {
             $this->seedAdministratorQuestions($administrator, $regulation);
         }
+
+        $this->call(RegulationSeeder::class);
     }
 
     private function seedCategories(Exam $exam, int $total): void

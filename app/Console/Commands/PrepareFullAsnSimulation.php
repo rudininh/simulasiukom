@@ -4,33 +4,64 @@ namespace App\Console\Commands;
 
 use App\Models\Regulation;
 use App\Services\AsnSimulationPreparationService;
+use App\Services\RegulationOcrService;
 use App\Services\RegulationPdfDownloaderService;
 use App\Services\RegulationTextExtractorService;
 use Illuminate\Console\Command;
 
 class PrepareFullAsnSimulation extends Command
 {
-    protected $signature = 'asn:prepare-full-simulation';
+    protected $signature = 'asn:prepare-full-simulation
+        {--download-pdfs : Download PDFs from official_url/pdf_url}
+        {--skip-download : Skip PDF download}
+        {--extract : Extract downloaded files}
+        {--ocr : Run OCR for need_ocr PDFs}
+        {--force-reset : Force reset/deactivate old simulations}
+        {--mode=dummy : Question generation mode, dummy or ai}';
 
     protected $description = 'Prepare full Manajemen ASN CAT simulations, regulations, categories, and active questions';
 
     public function handle(
         AsnSimulationPreparationService $simulation,
         RegulationPdfDownloaderService $downloader,
-        RegulationTextExtractorService $extractor
+        RegulationTextExtractorService $extractor,
+        RegulationOcrService $ocr
     ): int {
         $reset = $simulation->resetOldSimulation();
         $regulations = $simulation->seedRegulations();
 
-        Regulation::whereNotNull('pdf_url')->where('pdf_url', '<>', '')->each(fn (Regulation $regulation) => $downloader->download($regulation));
+        $shouldDownload = !$this->option('skip-download');
+        $shouldExtract = $this->option('extract') || !$this->option('skip-download');
 
-        Regulation::whereNotNull('file_path')->each(function (Regulation $regulation) use ($extractor) {
+        if ($shouldDownload) {
+            Regulation::where(function ($query) {
+                $query->where(function ($subQuery) {
+                    $subQuery->whereNotNull('official_url')->where('official_url', '<>', '');
+                })->orWhere(function ($subQuery) {
+                    $subQuery->whereNotNull('pdf_url')->where('pdf_url', '<>', '');
+                });
+            })->each(fn (Regulation $regulation) => $downloader->download($regulation));
+        }
+
+        if ($shouldExtract) {
+            Regulation::whereNotNull('file_path')->each(function (Regulation $regulation) use ($extractor) {
+                try {
+                    $extractor->extract($regulation);
+                } catch (\Throwable) {
+                    // Extraction errors are stored on each regulation and should not stop preparation.
+                }
+            });
+        }
+
+        if ($this->option('ocr')) {
+            Regulation::where('extraction_status', 'need_ocr')->each(function (Regulation $regulation) use ($ocr) {
             try {
-                $extractor->extract($regulation);
+                $ocr->process($regulation);
             } catch (\Throwable) {
-                // Extraction errors are stored on each regulation and should not stop preparation.
+                // OCR errors are stored on each regulation and should not stop preparation.
             }
-        });
+            });
+        }
 
         $courses = $simulation->seedCoursesAndQuestions();
         $readiness = $simulation->validateReadiness();

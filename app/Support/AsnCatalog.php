@@ -94,4 +94,14 @@ class AsnCatalog
             ['Regulasi Lokal/Instansi', null, 'Regulasi Lokal/Instansi', 'Regulasi Lokal/Instansi', 'Disesuaikan', 'Perwali/Perbup/Pergub tentang disiplin ASN, TPP, jam kerja, presensi, kode etik, mutasi, promosi, pola karier, standar kompetensi jabatan, dan pedoman teknis BKPSDM/BKD.'],
         ];
     }
+
+    public static function regulationUrls(): array
+    {
+        return [
+            'UU Nomor 20 Tahun 2023' => [
+                'official_url' => 'https://peraturan.bpk.go.id/Details/269470/uu-no-20-tahun-2023',
+                'pdf_url' => 'https://peraturan.bpk.go.id/Download/326904/UU%20Nomor%2020%20Tahun%202023.pdf',
+            ],
+        ];
+    }
 }

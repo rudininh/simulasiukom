@@ -8,6 +8,7 @@ use App\Models\Question;
 use App\Models\Regulation;
 use App\Models\User;
 use App\Support\AsnCatalog;
+use Database\Seeders\RegulationSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -47,36 +48,13 @@ class AsnSimulationPreparationService
 
     public function seedRegulations(?int $adminId = null): int
     {
-        $adminId = $adminId ?: User::where('role', 'admin')->value('id');
-        $count = 0;
+        app(RegulationSeeder::class)->run();
 
-        foreach (AsnCatalog::defaultRegulations() as [$number, $year, $title, $category, $priority, $note]) {
-            Regulation::updateOrCreate([
-                'title' => $title,
-                'regulation_number' => $number,
-                'year' => $year,
-                'category' => $category,
-            ], [
-                'priority' => $priority,
-                'description' => $note,
-                'usage_notes' => $note,
-                'download_status' => 'manual_required',
-                'download_error' => 'URL PDF resmi belum diisi. Admin dapat upload manual atau mengisi pdf_url lalu menjalankan download.',
-                'ocr_language' => config('ocr.language', 'ind'),
-                'extracted_text' => $this->regulationSeedText($category, $number, $note),
-                'extraction_status' => 'extracted',
-                'extraction_method' => 'seed',
-                'extraction_error' => null,
-                'extracted_at' => now(),
-                'summary' => "Pokok pengaturan: {$note}\nMateri potensial untuk soal: pemahaman ketentuan, prosedur administratif, penerapan aturan, kewenangan pejabat, dan studi kasus Manajemen ASN.",
-                'keywords' => $this->keywordsFor($category, $number),
-                'status' => 'active',
-                'uploaded_by' => $adminId,
-            ]);
-            $count++;
+        if ($adminId = ($adminId ?: User::where('role', 'admin')->value('id'))) {
+            Regulation::whereNull('uploaded_by')->update(['uploaded_by' => $adminId]);
         }
 
-        return $count;
+        return count(RegulationSeeder::regulations());
     }
 
     public function seedCoursesAndQuestions(): array
@@ -282,21 +260,21 @@ class AsnSimulationPreparationService
     private function regulationFor(string $code): ?Regulation
     {
         $map = [
-            'REGULASI_ASN' => 'UU Nomor 20 Tahun 2023',
-            'MANAJEMEN_ASN' => 'PP Nomor 11 Tahun 2017',
+            'REGULASI_ASN' => 'Undang-Undang Nomor 20 Tahun 2023',
+            'MANAJEMEN_ASN' => 'Peraturan Pemerintah Nomor 11 Tahun 2017',
             'KINERJA_KOMPETENSI_ASN' => 'PermenPANRB Nomor 6 Tahun 2022',
             'KEPEMIMPINAN_MANAJERIAL' => 'PermenPANRB Nomor 38 Tahun 2017',
-            'PELAYANAN_PUBLIK_ETIKA' => 'UU Nomor 25 Tahun 2009',
-            'DISIPLIN_ETIKA_NETRALITAS' => 'PP Nomor 94 Tahun 2021',
-            'PERKAWINAN_PERCERAIAN_ASN' => 'PP Nomor 10 Tahun 1983',
-            'PENSIUN_PEMBERHENTIAN_PNS' => 'UU Nomor 11 Tahun 1969',
+            'PELAYANAN_PUBLIK_ETIKA' => 'Undang-Undang Nomor 25 Tahun 2009',
+            'DISIPLIN_ETIKA_NETRALITAS' => 'Peraturan Pemerintah Nomor 94 Tahun 2021',
+            'PERKAWINAN_PERCERAIAN_ASN' => 'Peraturan Pemerintah Nomor 10 Tahun 1983',
+            'PENSIUN_PEMBERHENTIAN_PNS' => 'Undang-Undang Nomor 11 Tahun 1969',
             'PENGADAAN_ASN' => 'PermenPANRB Nomor 6 Tahun 2024',
             'CUTI_ASN' => 'Peraturan BKN Nomor 24 Tahun 2017',
             'PANGKAT_PROMOSI_MUTASI_KARIER' => 'Peraturan BKN Nomor 2 Tahun 2025',
             'ANGKA_KREDIT_JF' => 'Peraturan BKN Nomor 3 Tahun 2023',
         ];
 
-        return Regulation::where('regulation_number', $map[$code] ?? null)->first() ?: Regulation::first();
+        return Regulation::where('title', 'like', '%'.($map[$code] ?? '').'%')->first() ?: Regulation::first();
     }
 
     private function regulationSeedText(string $category, string $number, string $note): string
