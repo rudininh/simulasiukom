@@ -11,6 +11,11 @@
                 <p class="mb-1"><strong>Tahun:</strong> {{ $regulation->year }}</p>
                 <p class="mb-1"><strong>Kategori:</strong> {{ $regulation->category }}</p>
                 <p class="text-muted">{{ $regulation->description }}</p>
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    @if($regulation->official_url)<span class="badge bg-light text-primary border">Link resmi</span>@endif
+                    @if($regulation->pdf_url)<span class="badge bg-light text-info border">URL PDF</span>@endif
+                    @if($regulation->file_path)<span class="badge bg-success">File tersimpan</span>@endif
+                </div>
                 <a class="btn btn-navy" href="{{ route('regulations.public.show',$regulation) }}">Lihat Detail</a>
             </div>
         </div>

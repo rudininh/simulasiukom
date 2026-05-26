@@ -46,6 +46,71 @@
             <a class="btn btn-outline-secondary" href="{{ route('admin.generated-questions.index',['regulation_id'=>$regulation->id]) }}">Lihat Draft Soal</a>
             <form method="post" action="{{ route('admin.regulations.summarize',$regulation) }}">@csrf<button class="btn btn-outline-success w-100">Generate Ringkasan Regulasi</button></form>
         </div>
+        <div class="cat-card p-3 mt-3">
+            <h5 class="fw-bold mb-3">Kelola File / Link</h5>
+            <div class="d-grid gap-2">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#uploadPdfPanel" aria-expanded="false" aria-controls="uploadPdfPanel">
+                    Upload PDF Aturan
+                </button>
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#linkAturanPanel" aria-expanded="false" aria-controls="linkAturanPanel">
+                    Isi Link Aturan
+                </button>
+            </div>
+
+            <div class="collapse mt-3" id="uploadPdfPanel">
+                <form method="post" action="{{ route('admin.regulations.update', $regulation) }}" enctype="multipart/form-data" class="border rounded-3 p-3 bg-light">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="title" value="{{ $regulation->title }}">
+                    <input type="hidden" name="regulation_number" value="{{ $regulation->regulation_number }}">
+                    <input type="hidden" name="year" value="{{ $regulation->year }}">
+                    <input type="hidden" name="category" value="{{ $regulation->category }}">
+                    <input type="hidden" name="priority" value="{{ $regulation->priority }}">
+                    <input type="hidden" name="description" value="{{ $regulation->description }}">
+                    <input type="hidden" name="usage_notes" value="{{ $regulation->usage_notes }}">
+                    <input type="hidden" name="official_url" value="{{ $regulation->official_url }}">
+                    <input type="hidden" name="pdf_url" value="{{ $regulation->pdf_url }}">
+                    <input type="hidden" name="status" value="{{ $regulation->status }}">
+                    <input type="hidden" name="can_download_by_participant" value="{{ $regulation->can_download_by_participant ? 1 : 0 }}">
+                    <input type="hidden" name="auto_download_pdf" value="0">
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Upload PDF Aturan</label>
+                        <input class="form-control" type="file" name="file" accept=".pdf" required>
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Simpan PDF</button>
+                </form>
+            </div>
+
+            <div class="collapse mt-3" id="linkAturanPanel">
+                <form method="post" action="{{ route('admin.regulations.update', $regulation) }}" class="border rounded-3 p-3 bg-light">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" name="title" value="{{ $regulation->title }}">
+                    <input type="hidden" name="regulation_number" value="{{ $regulation->regulation_number }}">
+                    <input type="hidden" name="year" value="{{ $regulation->year }}">
+                    <input type="hidden" name="category" value="{{ $regulation->category }}">
+                    <input type="hidden" name="priority" value="{{ $regulation->priority }}">
+                    <input type="hidden" name="description" value="{{ $regulation->description }}">
+                    <input type="hidden" name="usage_notes" value="{{ $regulation->usage_notes }}">
+                    <input type="hidden" name="status" value="{{ $regulation->status }}">
+                    <input type="hidden" name="can_download_by_participant" value="{{ $regulation->can_download_by_participant ? 1 : 0 }}">
+                    <input type="hidden" name="auto_download_pdf" value="1">
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Link Resmi Aturan</label>
+                        <input class="form-control" type="url" name="official_url" value="{{ $regulation->official_url }}" placeholder="https://...">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">Link PDF Aturan</label>
+                        <input class="form-control" type="url" name="pdf_url" value="{{ $regulation->pdf_url }}" placeholder="https://...pdf">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="can_download_by_participant" value="1" id="quick-download-{{ $regulation->id }}" @checked($regulation->can_download_by_participant)>
+                        <label class="form-check-label" for="quick-download-{{ $regulation->id }}">Peserta boleh download file</label>
+                    </div>
+                    <button class="btn btn-outline-primary w-100" type="submit">Simpan Link</button>
+                </form>
+            </div>
+        </div>
     </div>
     <div class="col-lg-7">
         <div class="cat-card p-3">

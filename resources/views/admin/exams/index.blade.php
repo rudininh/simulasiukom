@@ -11,12 +11,15 @@
         </form>
     </div>
 </div>
+<div class="alert alert-info cat-card border-0 mb-4">
+    Paket final disiapkan sebagai ujian campuran semua kategori dengan <strong>100 soal</strong> per ujian.
+</div>
 <div class="cat-card p-3 mb-4">
 <form method="post" action="{{ route('admin.exams.store') }}" class="row g-2">@csrf
     <div class="col-md-6"><input class="form-control" name="title" placeholder="Nama ujian" required></div>
     <div class="col-md-3"><input class="form-control" name="exam_type" placeholder="Jenis ujian"></div>
     <div class="col-md-3"><input class="form-control" name="duration_minutes" type="number" placeholder="Durasi menit" required></div>
-    <div class="col-md-3"><input class="form-control" name="total_questions" type="number" placeholder="Total soal" required></div>
+    <div class="col-md-3"><input class="form-control" name="total_questions" type="number" placeholder="Total soal" value="100" required></div>
     <div class="col-md-3"><input class="form-control" name="passing_grade" type="number" step="0.01" placeholder="Passing grade" required></div>
     <div class="col-md-3"><input class="form-control" name="available_from" type="date"></div>
     <div class="col-md-3"><input class="form-control" name="available_until" type="date"></div>

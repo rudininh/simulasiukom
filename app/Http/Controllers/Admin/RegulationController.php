@@ -13,31 +13,70 @@ use Illuminate\Support\Facades\Storage;
 
 class RegulationController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = trim((string) $request->query('q', ''));
+
+        $regulations = Regulation::with('uploader', 'generatedQuestions')
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('title', 'like', '%'.$search.'%')
+                        ->orWhere('regulation_number', 'like', '%'.$search.'%')
+                        ->orWhere('category', 'like', '%'.$search.'%')
+                        ->orWhere('description', 'like', '%'.$search.'%')
+                        ->orWhere('usage_notes', 'like', '%'.$search.'%')
+                        ->orWhere('official_url', 'like', '%'.$search.'%')
+                        ->orWhere('pdf_url', 'like', '%'.$search.'%')
+                        ->orWhere('priority', 'like', '%'.$search.'%');
+                });
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
         return view('admin.regulations.index', [
-            'regulations' => Regulation::with('uploader', 'generatedQuestions')->latest()->paginate(15),
+            'regulations' => $regulations,
+            'search' => $search,
         ]);
     }
 
-    public function store(Request $request, RegulationTextExtractorService $extractor)
+    public function store(
+        Request $request,
+        RegulationTextExtractorService $extractor,
+        RegulationPdfDownloaderService $downloader
+    )
     {
         $data = $this->validated($request);
+        $autoDownload = $request->boolean('auto_download_pdf') || $request->input('action') === 'save_download';
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $data['file_path'] = $file->store('regulations', 'public');
             $data['original_filename'] = $file->getClientOriginalName();
             $data['mime_type'] = $file->getClientMimeType();
             $data['file_size'] = $file->getSize();
+            $data['download_status'] = 'downloaded';
+            $data['download_error'] = null;
+            $data['downloaded_at'] = now();
         }
         $data['uploaded_by'] = auth()->id();
         $data['ocr_language'] = config('ocr.language');
         $regulation = Regulation::create($data);
 
-        try {
-            $extractor->extract($regulation);
-        } catch (\Throwable $e) {
-            return redirect()->route('admin.regulations.show', $regulation)->withErrors(['file' => $e->getMessage()]);
+        if ($autoDownload && !$request->hasFile('file') && !empty($data['pdf_url'])) {
+            if (!$downloader->download($regulation)) {
+                return redirect()->route('admin.regulations.show', $regulation)->withErrors([
+                    'pdf_url' => 'PDF dari URL gagal diunduh. Silakan cek URL atau upload file PDF langsung.',
+                ]);
+            }
+            $regulation->refresh();
+        }
+
+        if ($regulation->file_path) {
+            try {
+                $extractor->extract($regulation->refresh());
+            } catch (\Throwable $e) {
+                return redirect()->route('admin.regulations.show', $regulation)->withErrors(['file' => $e->getMessage()]);
+            }
         }
 
         return redirect()->route('admin.regulations.show', $regulation)->with('success', 'Regulasi berhasil diupload.');
@@ -49,12 +88,15 @@ class RegulationController extends Controller
         return view('admin.regulations.show', compact('regulation'));
     }
 
-    public function update(Request $request, Regulation $regulation)
+    public function update(
+        Request $request,
+        Regulation $regulation,
+        RegulationTextExtractorService $extractor,
+        RegulationPdfDownloaderService $downloader
+    )
     {
         $data = $this->validated($request);
-        if (!$request->hasFile('file') && $regulation->file_path && empty($data['pdf_url'])) {
-            unset($data['download_status']);
-        }
+        $autoDownload = $request->boolean('auto_download_pdf') || $request->input('action') === 'save_download';
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $data['file_path'] = $file->store('regulations', 'public');
@@ -62,8 +104,35 @@ class RegulationController extends Controller
             $data['mime_type'] = $file->getClientMimeType();
             $data['file_size'] = $file->getSize();
             $data['extraction_status'] = 'pending';
+            $data['download_status'] = 'downloaded';
+            $data['download_error'] = null;
+            $data['downloaded_at'] = now();
         }
         $regulation->update($data);
+
+        if (!$request->hasFile('file') && !empty($data['pdf_url']) && !$autoDownload && !$regulation->fresh()->file_path) {
+            $regulation->update([
+                'download_status' => 'manual_required',
+                'download_error' => null,
+            ]);
+        }
+
+        if ($autoDownload && !$request->hasFile('file') && !empty($data['pdf_url'])) {
+            if (!$downloader->download($regulation->fresh())) {
+                return back()->withErrors([
+                    'pdf_url' => 'PDF dari URL gagal diunduh. Silakan cek URL atau upload file PDF langsung.',
+                ]);
+            }
+            $regulation->refresh();
+        }
+
+        if ($regulation->file_path) {
+            try {
+                $extractor->extract($regulation->refresh());
+            } catch (\Throwable $e) {
+                return back()->withErrors(['file' => $e->getMessage()]);
+            }
+        }
 
         return back()->with('success', 'Regulasi diperbarui.');
     }
@@ -89,7 +158,10 @@ class RegulationController extends Controller
         return Storage::disk('public')->download($regulation->file_path, $regulation->original_filename ?: basename($regulation->file_path));
     }
 
-    public function downloadPdf(Regulation $regulation, RegulationPdfDownloaderService $downloader)
+    public function downloadPdf(
+        Regulation $regulation,
+        RegulationPdfDownloaderService $downloader
+    )
     {
         $result = $downloader->download($regulation);
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
@@ -191,6 +263,7 @@ class RegulationController extends Controller
             'pdf_url' => ['nullable', 'url', 'max:255'],
             'can_download_by_participant' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
+            'auto_download_pdf' => ['nullable', 'boolean'],
             'file' => ['nullable', 'file', 'mimes:pdf,docx,txt', 'max:20480'],
             'status' => ['nullable', 'string', 'max:255'],
         ], [
@@ -200,6 +273,7 @@ class RegulationController extends Controller
         $data['can_download_by_participant'] = $request->boolean('can_download_by_participant');
         $data['is_active'] = $request->boolean('is_active', true);
         $data['status'] = $data['status'] ?: 'Berlaku';
+        unset($data['auto_download_pdf']);
         if ($request->hasFile('file')) {
             $data['download_status'] = 'downloaded';
             $data['download_error'] = null;
