@@ -24,6 +24,9 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <div><i class="fa-solid fa-circle-user fs-4 me-2"></i> Hello, <strong>{{ auth()->user()->name }}</strong></div>
                 <a class="header-btn" href="{{ auth()->user()->isAdmin() ? route('admin.dashboard') : route('dashboard') }}"><i class="fa-solid fa-gauge-high me-2"></i>Dashboard</a>
+                @if(!auth()->user()->isAdmin())
+                    <a class="header-btn" href="{{ route('angka-kredit.index') }}"><i class="fa-solid fa-calculator me-2"></i>Simulasi AK</a>
+                @endif
                 <form method="post" action="{{ route('logout') }}">@csrf
                     <button class="header-btn"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</button>
                 </form>

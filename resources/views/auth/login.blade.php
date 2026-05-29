@@ -4,23 +4,38 @@
     <div class="text-center mb-4">
         <div class="brand-logo mx-auto mb-3" style="width:96px;height:96px;">CAT</div>
         <h1 class="h4 fw-bold text-primary-emphasis">SIMULASI CAT UJI KOMPETENSI MANAJEMEN ASN</h1>
-        <p class="text-muted small">{{ $quickLogin ? 'Silakan pilih mode akses aplikasi' : 'Silakan masukkan username dan password Anda' }}</p>
+        <p class="text-muted small">
+            @if(empty($selectedRole))
+                Silakan pilih mode login
+            @elseif($selectedRole === 'admin')
+                Login sebagai Admin
+            @else
+                Login sebagai User
+            @endif
+        </p>
     </div>
     @if ($errors->any()) <div class="alert alert-danger py-2">{{ $errors->first() }}</div> @endif
-    @if ($quickLogin)
+    @if (empty($selectedRole))
         <div class="d-grid gap-3">
-            <form method="post" action="{{ route('quick-login', 'admin') }}">
+            <a class="btn btn-success btn-lg w-100 py-3" href="{{ route('login.user') }}"><i class="fa-solid fa-circle-user me-2"></i>Login User</a>
+            <a class="btn btn-navy btn-lg w-100 py-3" href="{{ route('login.admin') }}"><i class="fa-solid fa-user-shield me-2"></i>Login Admin</a>
+            <a href="{{ route('register') }}" class="btn btn-outline-success btn-lg w-100"><i class="fa-solid fa-user-plus me-2"></i>Daftar User</a>
+        </div>
+    @elseif ($quickLogin)
+        <div class="d-grid gap-3">
+            <form method="post" action="{{ route('quick-login', $selectedRole) }}">
                 @csrf
-                <button class="btn btn-navy btn-lg w-100 py-3"><i class="fa-solid fa-user-shield me-2"></i>LOGIN SEBAGAI ADMIN</button>
+                <button class="btn {{ $selectedRole === 'admin' ? 'btn-navy' : 'btn-success' }} btn-lg w-100 py-3">
+                    <i class="fa-solid {{ $selectedRole === 'admin' ? 'fa-user-shield' : 'fa-circle-user' }} me-2"></i>
+                    Quick Login {{ $selectedRole === 'admin' ? 'Admin' : 'User' }}
+                </button>
             </form>
-            <form method="post" action="{{ route('quick-login', 'peserta') }}">
-                @csrf
-                <button class="btn btn-success btn-lg w-100 py-3"><i class="fa-solid fa-circle-user me-2"></i>LOGIN SEBAGAI USER</button>
-            </form>
+            <a class="btn btn-outline-secondary" href="{{ route('login') }}">Ganti mode login</a>
         </div>
     @else
     <form method="post" action="{{ url('/login') }}">
         @csrf
+        <input type="hidden" name="role" value="{{ $selectedRole }}">
         <label class="form-label fw-bold small"><i class="fa-solid fa-user me-2 text-primary-emphasis"></i> Username / Email</label>
         <input class="form-control form-control-lg mb-3" name="login" value="{{ old('login') }}" placeholder="Masukkan username atau email" required>
         <label class="form-label fw-bold small"><i class="fa-solid fa-lock me-2 text-primary-emphasis"></i> Password</label>
@@ -38,10 +53,13 @@
             <label><input type="checkbox" name="remember" value="1" class="me-2">Ingat saya</label>
             <a class="text-primary-emphasis fw-bold text-decoration-none" href="#">Lupa password?</a>
         </div>
-        <button class="btn btn-navy btn-lg w-100 mb-4"><i class="fa-solid fa-right-to-bracket me-2"></i>MASUK</button>
+        <button class="btn {{ $selectedRole === 'admin' ? 'btn-navy' : 'btn-success' }} btn-lg w-100 mb-4"><i class="fa-solid fa-right-to-bracket me-2"></i>MASUK</button>
         <div class="divider mb-4">atau</div>
-        <a href="{{ route('register') }}" class="btn btn-success btn-lg w-100"><i class="fa-solid fa-user-plus me-2"></i>DAFTAR SIMULASI</a>
-        <p class="text-center small text-muted mt-3 mb-0">Belum punya akun? Daftar sekarang untuk mengikuti Simulasi CAT Manajemen ASN</p>
+        <a href="{{ route('login') }}" class="btn btn-outline-secondary btn-lg w-100"><i class="fa-solid fa-users me-2"></i>GANTI MODE LOGIN</a>
+        @if($selectedRole !== 'admin')
+            <a href="{{ route('register') }}" class="btn btn-success btn-lg w-100 mt-3"><i class="fa-solid fa-user-plus me-2"></i>DAFTAR SIMULASI</a>
+            <p class="text-center small text-muted mt-3 mb-0">Belum punya akun? Daftar sekarang untuk mengikuti Simulasi CAT Manajemen ASN</p>
+        @endif
     </form>
     @endif
 </div>

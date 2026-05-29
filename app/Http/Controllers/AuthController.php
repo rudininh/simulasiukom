@@ -16,7 +16,24 @@ class AuthController extends Controller
             $this->refreshCaptcha($request);
         }
 
-        return view('auth.login', ['quickLogin' => config('app.quick_login')]);
+        return view('auth.login', [
+            'quickLogin' => config('app.quick_login'),
+            'selectedRole' => $request->query('role'),
+        ]);
+    }
+
+    public function showUserLogin(Request $request)
+    {
+        $request->merge(['role' => 'peserta']);
+
+        return $this->showLogin($request);
+    }
+
+    public function showAdminLogin(Request $request)
+    {
+        $request->merge(['role' => 'admin']);
+
+        return $this->showLogin($request);
     }
 
     public function login(Request $request)
@@ -25,6 +42,7 @@ class AuthController extends Controller
             'login' => ['required', 'string'],
             'password' => ['required', 'string'],
             'captcha' => ['required', 'string'],
+            'role' => ['nullable', 'in:admin,peserta'],
         ]);
 
         if (strtoupper($credentials['captcha']) !== session('captcha_code')) {
@@ -35,6 +53,15 @@ class AuthController extends Controller
         $field = filter_var($credentials['login'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
         if (Auth::attempt([$field => $credentials['login'], 'password' => $credentials['password']], $request->boolean('remember'))) {
             $request->session()->regenerate();
+            if (!empty($credentials['role']) && Auth::user()->role !== $credentials['role']) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                $this->refreshCaptcha($request);
+
+                return back()->withErrors(['login' => 'Akun tidak sesuai dengan pilihan login.'])->withInput();
+            }
+
             return Auth::user()->isAdmin() ? redirect('/admin') : redirect('/dashboard');
         }
 

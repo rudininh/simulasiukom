@@ -58,6 +58,16 @@ class User extends Authenticatable
         return $this->hasMany(ExamAttempt::class);
     }
 
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+
+    public function simulasiAngkaKredits()
+    {
+        return $this->hasMany(SimulasiAngkaKredit::class);
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

@@ -9,6 +9,7 @@
         $cards = [
             ['Daftar Simulasi','Lihat daftar simulasi uji kompetensi yang dapat Anda ikuti','Lihat Simulasi','fa-clipboard-list',route('exams.index')],
             ['Riwayat Ujian','Lihat hasil simulasi uji kompetensi yang telah Anda selesaikan','Lihat Riwayat','fa-clock-rotate-left',route('history')],
+            ['Simulasi Angka Kredit','Hitung estimasi Angka Kredit Jabatan Fungsional berdasarkan data kepegawaian dan predikat kinerja.','Mulai Simulasi','fa-calculator',route('angka-kredit.index')],
             ['Profil Peserta','Kelola informasi profil peserta uji kompetensi','Edit Profil','fa-user-pen',route('profile.edit')],
             ['Bank Regulasi','Lihat dasar hukum dan regulasi yang menjadi sumber materi soal','Lihat Regulasi','fa-scale-balanced',route('regulations.public')],
             ['Bantuan','Panduan penggunaan sistem simulasi uji kompetensi','Lihat Bantuan','fa-circle-question','#'],

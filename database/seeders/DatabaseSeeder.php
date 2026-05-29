@@ -33,5 +33,7 @@ class DatabaseSeeder extends Seeder
         $simulation = app(AsnSimulationPreparationService::class);
         $simulation->seedRegulations($admin->id);
         $simulation->seedCoursesAndQuestions();
+
+        $this->call(AngkaKreditMasterSeeder::class);
     }
 }

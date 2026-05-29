@@ -9,12 +9,15 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RegulationPublicController;
+use App\Http\Controllers\SimulasiAngkaKreditController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::get('/login/user', [AuthController::class, 'showUserLogin'])->name('login.user');
+    Route::get('/login/admin', [AuthController::class, 'showAdminLogin'])->name('login.admin');
     Route::post('/login', [AuthController::class, 'login']);
     Route::post('/quick-login/{role}', [AuthController::class, 'quickLogin'])->name('quick-login');
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -35,6 +38,14 @@ Route::middleware(['auth', 'role:peserta'])->group(function () {
     Route::get('/riwayat', [AttemptController::class, 'history'])->name('history');
     Route::get('/profil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/user/profil', [ProfileController::class, 'edit'])->name('user.profile.edit');
+    Route::post('/user/profil', [ProfileController::class, 'update'])->name('user.profile.update');
+    Route::get('/user/simulasi-angka-kredit', [SimulasiAngkaKreditController::class, 'index'])->name('angka-kredit.index');
+    Route::post('/user/simulasi-angka-kredit/hitung', [SimulasiAngkaKreditController::class, 'calculate'])->name('angka-kredit.calculate');
+    Route::post('/user/simulasi-angka-kredit/simpan', [SimulasiAngkaKreditController::class, 'store'])->name('angka-kredit.store');
+    Route::get('/user/simulasi-angka-kredit/riwayat', [SimulasiAngkaKreditController::class, 'history'])->name('angka-kredit.history');
+    Route::get('/user/simulasi-angka-kredit/{simulasiAngkaKredit}', [SimulasiAngkaKreditController::class, 'show'])->name('angka-kredit.show');
+    Route::delete('/user/simulasi-angka-kredit/{simulasiAngkaKredit}', [SimulasiAngkaKreditController::class, 'destroy'])->name('angka-kredit.destroy');
     Route::get('/regulasi', [RegulationPublicController::class, 'index'])->name('regulations.public');
     Route::get('/regulasi/{regulation}', [RegulationPublicController::class, 'show'])->name('regulations.public.show');
     Route::get('/regulasi/{regulation}/preview', [RegulationPublicController::class, 'preview'])->name('regulations.public.preview');
